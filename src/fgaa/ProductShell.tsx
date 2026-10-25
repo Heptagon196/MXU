@@ -1,16 +1,19 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ListChecks, Swords } from 'lucide-react';
+import { BookOpen, ListChecks, Swords, Settings } from 'lucide-react';
 import './i18n';
 import { BattleLibraryPage } from './BattleLibraryPage';
+import { GlobalSettingsPage } from './GlobalSettingsPage';
 import { useBattleStore } from './battleStore';
 import { useAppStore } from '@/stores/appStore';
-import { withBattleChoices, taskOptionKey } from './taskInterface';
+import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
+import { withBattleChoices, taskOptionKey, refillResources } from './taskInterface';
 
 const pages = [
   { id: 'automation', icon: ListChecks },
   { id: 'battle', icon: Swords },
   { id: 'chaldea', icon: BookOpen },
+  { id: 'settings', icon: Settings },
 ] as const;
 type Page = (typeof pages)[number]['id'];
 
@@ -20,14 +23,27 @@ export function ProductShell({ children }: { children: ReactNode }) {
   const [page, setPage] = useState<Page>('automation');
   const dirty = useBattleStore((state) => state.dirty);
   const library = useBattleStore((state) => state.library);
+  const hideSQ = useFgaaSettingsStore((state) => state.values.hide_sq_in_ap_resources);
   const pi = useAppStore((state) => state.projectInterface);
   useEffect(() => {
     if (!pi || pi.name !== 'FGAA') return;
     const next = withBattleChoices(pi, library);
-    const key = taskOptionKey('Battle', 'battle_config');
-    if (JSON.stringify(next.option?.[key]) !== JSON.stringify(pi.option?.[key]))
+    const key = taskOptionKey('Battle', 'refill_resource');
+    const refill = next.option?.[key];
+    if (refill && (refill.type === 'select' || refill.type === undefined)) {
+      next.option = {
+        ...next.option,
+        [key]: {
+          ...refill,
+          cases: refillResources
+            .filter((name) => !hideSQ || name !== 'SQ')
+            .map((name) => ({ name, label: `$tasks.refill.${name}` })),
+        },
+      };
+    }
+    if (JSON.stringify(next.option) !== JSON.stringify(pi.option))
       useAppStore.getState().setProjectInterface(next);
-  }, [pi, library]);
+  }, [pi, library, hideSQ]);
   useEffect(() => {
     const preventLoss = (event: BeforeUnloadEvent) => {
       if (dirty) {
@@ -43,7 +59,7 @@ export function ProductShell({ children }: { children: ReactNode }) {
       <nav
         role="tablist"
         aria-label={t('navigation')}
-        className="flex shrink-0 gap-1 border-b border-border bg-bg-secondary px-3 py-2"
+        className="flex shrink-0 overflow-x-auto gap-1 border-b border-border bg-bg-secondary px-3 py-2"
       >
         {pages.map(({ id, icon: Icon }, index) => (
           <button
@@ -73,11 +89,20 @@ export function ProductShell({ children }: { children: ReactNode }) {
             className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm transition-colors ${page === id ? 'bg-bg-active text-accent' : 'text-text-secondary hover:bg-bg-hover'}`}
           >
             <Icon size={16} />
-            {t(id)}
+            {t(id === 'settings' ? 'globalSettingsTab' : id)}
             {id === 'battle' && dirty && <span aria-label={t('unsaved')}>•</span>}
           </button>
         ))}
       </nav>
+      <div
+        id="fgaa-page-settings"
+        role="tabpanel"
+        aria-labelledby="fgaa-tab-settings"
+        hidden={page !== 'settings'}
+        className="flex-1 min-h-0 overflow-y-auto"
+      >
+        <GlobalSettingsPage />
+      </div>
       {/* Keep the original app mounted: running tasks and instance state survive page changes. */}
       <div
         id="fgaa-page-automation"

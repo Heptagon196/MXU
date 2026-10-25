@@ -5,6 +5,7 @@ import type {
   OptionValue,
 } from '@/types/interface';
 import type { BattleLibrary, FgaConfig } from './battleLibrary';
+import { globalDefaults, validateGlobals, type GlobalSettings } from './globalSettings';
 
 export const launcherDefaults: Record<string, Record<string, string | number | boolean>> = {
   Battle: {
@@ -180,7 +181,11 @@ function resolveValue(
 }
 
 /** One full override avoids Maa's replacement of successive custom_action_param objects. */
-export function fgaTaskOverride(selected: SelectedTask, pi: ProjectInterface): string {
+export function fgaTaskOverride(
+  selected: SelectedTask,
+  pi: ProjectInterface,
+  globals: GlobalSettings = globalDefaults,
+): string {
   const mode = selected.taskName.slice('FGAA.'.length);
   const defaults = launcherDefaults[mode];
   if (!defaults || pi.name !== 'FGAA') throw new Error('Unknown FGA task');
@@ -227,6 +232,7 @@ export function fgaTaskOverride(selected: SelectedTask, pi: ProjectInterface): s
           server,
           launcher,
           battleConfig,
+          globals: validateGlobals(globals),
         },
       },
     },
