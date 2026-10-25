@@ -161,6 +161,11 @@ export function SkillEditor({
         aria-modal="true"
         aria-label={t('skill.title')}
         className="fga-skill-editor fixed inset-0 z-50 flex min-h-0 flex-col"
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          back();
+        }}
       >
         <div className="fga-rotate-notice">
           <p>{t('skill.landscapeHint')}</p>

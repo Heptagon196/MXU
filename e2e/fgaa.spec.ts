@@ -152,8 +152,14 @@ test('full-screen steps cancel safely and restore entry focus in a short viewpor
   await expect(editor.getByLabel('技能指令预览')).toHaveText('x23');
   await editor.getByRole('button', { name: '从者 2 技能 2', exact: true }).click();
   await page.screenshot({ path: 'test-results/fgaa-fullscreen-target-short.png' });
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
+  // Right-clicking a control cancels the step, without inserting its action.
+  await editor.getByRole('button', { name: '从者 1', exact: true }).click({ button: 'right' });
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('x23');
+  await editor.getByRole('button', { name: '重设', exact: true }).click();
+  await editor.getByRole('alertdialog').click({ button: 'right' });
+  await expect(editor.getByRole('alertdialog')).toHaveCount(0);
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('x23');
+  await editor.getByRole('button', { name: '攻击', exact: true }).click({ button: 'right' });
   await expect(editor).toHaveCount(0);
   await expect(entry).toBeFocused();
   await expect(page.locator('main pre')).toHaveText('x23');
