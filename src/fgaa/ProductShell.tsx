@@ -8,6 +8,7 @@ import { useBattleStore } from './battleStore';
 import { useAppStore } from '@/stores/appStore';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
 import { RuntimeStatus } from './RuntimeStatus';
+import { ChaldeaPage } from './ChaldeaPage';
 import { withBattleChoices, taskOptionKey, refillResources } from './taskInterface';
 
 const pages = [
@@ -143,10 +144,9 @@ export function ProductShell({ children }: { children: ReactNode }) {
         role="tabpanel"
         aria-labelledby="fgaa-tab-chaldea"
         hidden={page !== 'chaldea'}
-        className="flex-1 min-h-0 overflow-y-auto p-6"
+        className="flex-1 min-h-0"
       >
-        <h1 className="text-lg font-semibold">{t('chaldeaPending')}</h1>
-        <p className="mt-3 text-sm text-text-secondary">{t('chaldeaDetail')}</p>
+        <ChaldeaPage active={page === 'chaldea'} />
       </div>
     </div>
   );

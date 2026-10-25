@@ -1,4 +1,7 @@
 export default {
+  chaldeaLoading: '正在加载 Chaldea…',
+  chaldeaModuleMissing: '未找到 Chaldea 模块，请安装完整应用。',
+  chaldeaRetry: '重试',
   runtime: {
     title: 'FGA 任务状态',
     unknownTask: '未知任务',

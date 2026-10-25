@@ -1,4 +1,7 @@
 export default {
+  chaldeaLoading: 'Loading Chaldea…',
+  chaldeaModuleMissing: 'Chaldea is unavailable. Please install the complete application.',
+  chaldeaRetry: 'Retry',
   runtime: {
     title: 'FGA task status',
     unknownTask: 'Unknown task',

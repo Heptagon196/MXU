@@ -5,6 +5,7 @@ test('feature tabs retain a saved FGA library and export unknown fields intact',
   page,
 }) => {
   const errors: string[] = [];
+  await page.route('**/chaldea/index.html', (route) => route.fulfill({ status: 404 }));
   page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
   await page.goto('/');
@@ -25,7 +26,9 @@ test('feature tabs retain a saved FGA library and export unknown fields intact',
   await page.getByRole('button', { name: '保存配置库', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('已保存');
   await page.getByRole('tab', { name: 'Chaldea', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Chaldea 模块正在接入' })).toBeVisible();
+  await expect(
+    page.getByText('未找到 Chaldea 模块，请安装完整应用。', { exact: true }),
+  ).toBeVisible();
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await expect(page.getByLabel('配置名称', { exact: true })).toHaveValue('素材本 · MXU');
   await page.reload();
