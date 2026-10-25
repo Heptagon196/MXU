@@ -4,6 +4,8 @@ import { BookOpen, ListChecks, Swords } from 'lucide-react';
 import './i18n';
 import { BattleLibraryPage } from './BattleLibraryPage';
 import { useBattleStore } from './battleStore';
+import { useAppStore } from '@/stores/appStore';
+import { withBattleChoices, taskOptionKey } from './taskInterface';
 
 const pages = [
   { id: 'automation', icon: ListChecks },
@@ -17,6 +19,15 @@ export function ProductShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation('fgaa');
   const [page, setPage] = useState<Page>('automation');
   const dirty = useBattleStore((state) => state.dirty);
+  const library = useBattleStore((state) => state.library);
+  const pi = useAppStore((state) => state.projectInterface);
+  useEffect(() => {
+    if (!pi || pi.name !== 'FGAA') return;
+    const next = withBattleChoices(pi, library);
+    const key = taskOptionKey('Battle', 'battle_config');
+    if (JSON.stringify(next.option?.[key]) !== JSON.stringify(pi.option?.[key]))
+      useAppStore.getState().setProjectInterface(next);
+  }, [pi, library]);
   useEffect(() => {
     const preventLoss = (event: BeforeUnloadEvent) => {
       if (dirty) {

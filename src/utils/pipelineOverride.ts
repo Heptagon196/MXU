@@ -12,6 +12,7 @@ import type {
 } from '@/types/interface';
 import { isMxuSpecialTask, getMxuSpecialTask } from '@/types/specialTasks';
 import { loggers } from './logger';
+import { fgaTaskOverride } from '@/fgaa/taskInterface';
 import { findSwitchCase } from './optionHelpers';
 import { createDefaultOptionValue, sanitizeOptionValue } from '@/stores/helpers';
 
@@ -527,6 +528,9 @@ export const generateTaskPipelineOverride = (
   resourceName?: string,
   globalOptionValues?: Record<string, OptionValue>,
 ): string => {
+  if (projectInterface?.name === 'FGAA' && selectedTask.taskName.startsWith('FGAA.')) {
+    return fgaTaskOverride(selectedTask, projectInterface);
+  }
   // 处理 MXU 内置特殊任务
   if (isMxuSpecialTask(selectedTask.taskName)) {
     return generateMxuSpecialTaskOverride(selectedTask);
