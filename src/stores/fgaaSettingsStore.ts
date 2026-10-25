@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import { nativeDocument, nativeStorage } from '@/fgaa/nativeStorage';
 import {
   globalDefaults,
   loadGlobals,
   saveGlobals,
+  settingsKey,
+  validateGlobals,
   type GlobalSettings,
 } from '@/fgaa/globalSettings';
 function read() {
@@ -15,19 +18,47 @@ function read() {
 interface State {
   values: GlobalSettings;
   blocked: boolean;
-  save(values: GlobalSettings): void;
-  retry(): void;
+  saving: boolean;
+  loading: boolean;
+  save(values: GlobalSettings): Promise<void>;
+  retry(): Promise<void>;
 }
-export const useFgaaSettingsStore = create<State>((set) => ({
-  ...read(),
-  save(values) {
-    saveGlobals(localStorage, values);
-    set({ values: { ...values }, blocked: false });
+const repository = nativeDocument('globals');
+export const useFgaaSettingsStore = create<State>((set, get) => ({
+  ...(nativeStorage ? { values: { ...globalDefaults }, blocked: true } : read()),
+  saving: false,
+  loading: false,
+  async save(values) {
+    if (get().blocked || get().saving) throw new Error('FGA storage is not ready');
+    const next = validateGlobals(values);
+    set({ saving: true });
+    try {
+      if (nativeStorage) await repository.save(JSON.stringify({ version: 1, values: next }));
+      else saveGlobals(localStorage, next);
+      set({ values: { ...next }, blocked: false });
+    } finally {
+      set({ saving: false });
+    }
   },
-  retry() {
-    set(read());
+  async retry() {
+    if (get().loading || get().saving) return;
+    set({ loading: true });
+    try {
+      if (nativeStorage) {
+        const values = await repository.load(
+          () => localStorage.getItem(settingsKey),
+          (source) => loadGlobals({ getItem: () => source }),
+        );
+        set({ values, blocked: false });
+      } else set(read());
+    } catch {
+      set({ blocked: true });
+    } finally {
+      set({ loading: false });
+    }
   },
 }));
+if (nativeStorage) void useFgaaSettingsStore.getState().retry();
 export function snapshotGlobals(): GlobalSettings {
   const state = useFgaaSettingsStore.getState();
   if (state.blocked) throw new Error('FGA global settings could not be loaded');

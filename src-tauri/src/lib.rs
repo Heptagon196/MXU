@@ -1,6 +1,7 @@
 pub mod commands;
 mod fgaa_output;
 mod fgaa_queue;
+mod fgaa_storage;
 mod mxu_actions;
 pub mod screenshot_service;
 mod tray;
@@ -234,6 +235,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            fgaa_storage::fgaa_read_document,
+            fgaa_storage::fgaa_save_document,
             // Maa 核心命令
             commands::maa_core::maa_init,
             commands::maa_core::maa_set_resource_dir,

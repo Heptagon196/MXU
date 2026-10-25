@@ -6,7 +6,7 @@ import { SettingsGroup } from '@/components/ui/SettingsGroup';
 import { bounds, globalKeys, globalGroups, validateGlobals } from './globalSettings';
 export function GlobalSettingsPage() {
   const { t } = useTranslation('fgaa');
-  const { values, blocked, save, retry } = useFgaaSettingsStore();
+  const { values, blocked, saving, loading, save, retry } = useFgaaSettingsStore();
   const [status, setStatus] = useState('');
   const [dirty, setDirty] = useState(false);
   useEffect(() => {
@@ -23,7 +23,9 @@ export function GlobalSettingsPage() {
     <section className="mx-auto max-w-4xl p-6">
       <h1 className="text-lg font-semibold">{t('globals.title')}</h1>
       <p className="my-3 text-sm text-text-secondary">{t('globals.detail')}</p>
-      {blocked ? (
+      {loading ? (
+        <p role="status">{t('globals.loading')}</p>
+      ) : blocked ? (
         <div role="alert">
           {t('globals.blocked')} <button onClick={retry}>{t('globals.retry')}</button>
         </div>
@@ -34,7 +36,7 @@ export function GlobalSettingsPage() {
             setDirty(true);
             setStatus('');
           }}
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
             const data = new FormData(event.currentTarget);
             try {
@@ -44,7 +46,7 @@ export function GlobalSettingsPage() {
                   typeof values[key] === 'boolean' ? data.has(key) : Number(data.get(key)),
                 ]),
               );
-              save(validateGlobals(next));
+              await save(validateGlobals(next));
               setDirty(false);
               setStatus('saved');
             } catch {
@@ -54,7 +56,7 @@ export function GlobalSettingsPage() {
           className="space-y-4"
         >
           {Object.entries(globalGroups).map(([group, keys]) => (
-            <SettingsGroup key={group} title={t(`globals.groups.${group}`)}>
+            <SettingsGroup key={group} title={t(`globals.groups.${group}`)} disabled={saving}>
               <div className="grid gap-4 sm:grid-cols-2">
                 {keys.map((key) => (
                   <label
@@ -84,6 +86,7 @@ export function GlobalSettingsPage() {
           <button
             className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
             type="submit"
+            disabled={saving}
           >
             {t('globals.save')}
           </button>

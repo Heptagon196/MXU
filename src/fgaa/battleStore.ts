@@ -1,9 +1,12 @@
 import { create } from 'zustand';
+import { nativeDocument, nativeStorage } from './nativeStorage';
 import {
   loadLibrary,
   saveLibrary,
   updateEntry,
   validateFga,
+  decodeLibrary,
+  libraryKey,
   type BattleLibrary,
   type FgaConfig,
 } from './battleLibrary';
@@ -19,8 +22,10 @@ interface BattleState {
   select(id: string): void;
   add(data: FgaConfig): void;
   update(changes: FgaConfig): void;
-  save(): void;
-  retry(): void;
+  saving: boolean;
+  loading: boolean;
+  save(): Promise<void>;
+  retry(): Promise<void>;
   undo(): void;
   redo(): void;
 }
@@ -31,11 +36,16 @@ function read() {
     return { library: { version: 1 as const, entries: [] }, error: String(error), blocked: true };
   }
 }
-const initial = read();
+const repository = nativeDocument('library');
+const initial = nativeStorage
+  ? { library: { version: 1 as const, entries: [] }, error: null, blocked: true }
+  : read();
 export const useBattleStore = create<BattleState>((set, get) => ({
   ...initial,
   selectedId: initial.library.entries[0]?.id ?? null,
   dirty: false,
+  saving: false,
+  loading: false,
   undoStacks: {},
   redoStacks: {},
   select: (id) => set({ selectedId: id }),
@@ -96,18 +106,44 @@ export const useBattleStore = create<BattleState>((set, get) => ({
       undoStacks: { ...undoStacks, [selectedId]: [...(undoStacks[selectedId] ?? []), current] },
     });
   },
-  save: () => {
-    if (get().blocked) return;
+  save: async () => {
+    if (get().blocked || get().saving) return;
+    const library = get().library;
+    set({ saving: true });
     try {
-      saveLibrary(localStorage, get().library);
-      set({ dirty: false, error: null });
+      if (nativeStorage) {
+        const source = JSON.stringify(library);
+        decodeLibrary(source);
+        await repository.save(source);
+      } else saveLibrary(localStorage, library);
+      set({ dirty: get().library !== library, error: null });
     } catch (error) {
       set({ error: String(error) });
+    } finally {
+      set({ saving: false });
     }
   },
-  retry: () => {
-    if (!get().blocked) return;
-    const state = read();
-    set({ ...state, selectedId: state.library.entries[0]?.id ?? null });
+  retry: async () => {
+    if (!get().blocked || get().loading) return;
+    set({ loading: true });
+    try {
+      const state = nativeStorage
+        ? {
+            library: await repository.load(
+              () => localStorage.getItem(libraryKey),
+              (source) =>
+                source === null ? { version: 1 as const, entries: [] } : decodeLibrary(source),
+            ),
+            blocked: false,
+            error: null,
+          }
+        : read();
+      set({ ...state, selectedId: state.library.entries[0]?.id ?? null });
+    } catch (error) {
+      set({ blocked: true, error: String(error) });
+    } finally {
+      set({ loading: false });
+    }
   },
 }));
+if (nativeStorage) void useBattleStore.getState().retry();

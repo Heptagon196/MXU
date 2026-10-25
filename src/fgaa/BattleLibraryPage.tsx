@@ -38,7 +38,7 @@ export function BattleLibraryPage() {
       <header className="flex flex-wrap items-center gap-2 border-b border-border p-4">
         <h1 className="mr-auto text-base font-semibold">{t('battle')}</h1>
         <span className="text-xs text-text-muted" role="status">
-          {t(state.dirty ? 'unsaved' : 'saved')}
+          {t(state.loading ? 'globals.loading' : state.dirty ? 'unsaved' : 'saved')}
         </span>
         <button
           className={button}
@@ -58,7 +58,7 @@ export function BattleLibraryPage() {
         </button>
         <button
           className={`${button} bg-accent text-white`}
-          disabled={state.blocked || !state.dirty}
+          disabled={state.blocked || state.saving || !state.dirty}
           onClick={state.save}
         >
           <Save size={15} />
