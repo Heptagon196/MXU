@@ -95,7 +95,7 @@ test('full-screen editor preserves targets, attacks, history and saved commands'
   await expect(command).toHaveText('a(11)');
   await editor.getByRole('button', { name: '重做', exact: true }).click();
   await expect(command).toHaveText('a(11)64n1,#,');
-  await editor.getByRole('button', { name: '波次 1', exact: true }).click();
+  await editor.getByRole('button', { name: '开头', exact: true }).click();
   await editor.getByRole('button', { name: '1. a(11)', exact: true }).click();
   await editor.getByRole('button', { name: '敌方 2', exact: true }).click();
   await expect(command).toHaveText('a(11)t264n1,#,');
@@ -108,7 +108,7 @@ test('full-screen editor preserves targets, attacks, history and saved commands'
     'aria-pressed',
     'false',
   );
-  await editor.getByRole('button', { name: '波次 1', exact: true }).click();
+  await editor.getByRole('button', { name: '开头', exact: true }).click();
   await page.screenshot({ path: 'test-results/fgaa-fullscreen-main.png' });
   await editor.getByRole('button', { name: '完成编辑', exact: true }).click();
   await expect(editor).toHaveCount(0);
@@ -342,4 +342,98 @@ test('MXU dropdown keyboard navigation and viewport placement', async ({ page })
   await menu.press('Escape');
   await expect(menu).toHaveCount(0);
   await expect(trigger).toBeFocused();
+});
+
+test.describe('mobile skill maker', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+  test('requests landscape fullscreen and restores display on exit', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('mxu-language', 'zh-CN');
+      const calls: string[] = [];
+      Object.assign(window, { skillDisplayCalls: calls });
+      let fullscreen = false;
+      Object.defineProperty(document, 'fullscreenElement', {
+        get: () => (fullscreen ? document.documentElement : null),
+      });
+      Object.defineProperty(Element.prototype, 'requestFullscreen', {
+        value: async () => {
+          calls.push('fullscreen');
+          fullscreen = true;
+        },
+      });
+      Object.defineProperty(document, 'exitFullscreen', {
+        value: async () => {
+          calls.push('exit');
+          fullscreen = false;
+        },
+      });
+      Object.defineProperty(screen.orientation, 'lock', {
+        value: async (value: string) => {
+          calls.push(`lock:${value}`);
+        },
+      });
+      Object.defineProperty(screen.orientation, 'unlock', { value: () => calls.push('unlock') });
+    });
+    await page.goto('/');
+    await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+    await page.getByRole('button', { name: '新建配置', exact: true }).click();
+    await page.getByRole('button', { name: '编辑技能顺序', exact: true }).click();
+    await expect(
+      page.getByText('请将设备横屏，使用全屏技能编辑器。', { exact: true }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 844, height: 390 });
+    const editor = page.getByRole('dialog');
+    await expect(
+      editor.getByRole('button', { name: '从者 3 技能 3', exact: true }),
+    ).toBeInViewport();
+    await expect(editor.getByRole('button', { name: '从者 1 技能 1', exact: true })).toHaveCSS(
+      'background-color',
+      'rgb(198, 40, 40)',
+    );
+    await expect(editor.getByRole('button', { name: '从者 2 技能 1', exact: true })).toHaveCSS(
+      'background-color',
+      'rgb(2, 119, 189)',
+    );
+    await expect(editor.getByRole('button', { name: '从者 3 技能 1', exact: true })).toHaveCSS(
+      'background-color',
+      'rgb(245, 127, 23)',
+    );
+    await page.screenshot({ path: 'test-results/fgaa-fga-landscape.png' });
+    await editor.getByRole('button', { name: '完成编辑', exact: true }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => (window as unknown as { skillDisplayCalls: string[] }).skillDisplayCalls,
+        ),
+      )
+      .toEqual(['fullscreen', 'lock:landscape', 'unlock', 'exit']);
+  });
+});
+
+test('FGA attack limits and reset preserve recoverable command editing', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
+  await page.goto('/');
+  await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+  await page.getByRole('button', { name: '新建配置', exact: true }).click();
+  await page.getByRole('button', { name: '编辑技能顺序', exact: true }).click();
+  const editor = page.getByRole('dialog');
+  await editor.getByRole('button', { name: '攻击', exact: true }).click();
+  const before = editor.getByRole('group', { name: '宝具前普通卡数' });
+  await before.getByRole('button', { name: '2', exact: true }).click();
+  await editor.getByRole('button', { name: '宝具 1', exact: true }).click();
+  await editor.getByRole('button', { name: '宝具 2', exact: true }).click();
+  await expect(editor.getByRole('button', { name: '宝具 1', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await editor.getByRole('button', { name: '出牌 → 下一回合', exact: true }).click();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('5n2,');
+  await editor.getByRole('button', { name: '重设', exact: true }).click();
+  await editor.getByRole('alertdialog').getByRole('button', { name: '取消', exact: true }).click();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('5n2,');
+  await editor.getByRole('button', { name: '重设', exact: true }).click();
+  await editor.getByRole('alertdialog').getByRole('button', { name: '重设', exact: true }).click();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('尚未配置技能顺序');
+  await editor.getByRole('button', { name: '撤销', exact: true }).click();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('5n2,');
 });

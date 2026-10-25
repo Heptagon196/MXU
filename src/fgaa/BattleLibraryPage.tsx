@@ -1,13 +1,14 @@
 import { primaryButtonClass } from '@/components/FormControls';
 import { SelectInput } from '@/components/ui/SelectInput';
 import { formButtonClass, formInputClass } from '@/components/FormControls';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Copy, Download, Plus, Save, Upload } from 'lucide-react';
 import { TextInput } from '@/components/FormControls';
 import { exportFga, importFga } from './battleLibrary';
 import { useBattleStore } from './battleStore';
 import { SkillEditor } from './SkillEditor';
+import { enterSkillDisplay } from './skillDisplay';
 import { BattleSettings } from './BattleSettings';
 
 const button = formButtonClass;
@@ -18,6 +19,23 @@ export function BattleLibraryPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const displaySession = useRef<Promise<() => Promise<void>> | null>(null);
+  const openEditor = () => {
+    displaySession.current = enterSkillDisplay();
+    setEditing(true);
+  };
+  const closeEditor = () => {
+    setEditing(false);
+    const pending = displaySession.current;
+    displaySession.current = null;
+    void pending?.then((release) => release());
+  };
+  useEffect(
+    () => () => {
+      void displaySession.current?.then((release) => release());
+    },
+    [],
+  );
   const [section, setSection] = useState<'skills' | 'settings'>('skills');
   const selected = state.library.entries.find((entry) => entry.id === state.selectedId);
   const data = selected?.data;
@@ -44,7 +62,7 @@ export function BattleLibraryPage() {
           name={field('autoskill_name')}
           command={field('autoskill_cmd')}
           onChanged={(value) => state.update({ autoskill_cmd: value })}
-          onClose={() => setEditing(false)}
+          onClose={closeEditor}
           onUndo={state.undo}
           onRedo={state.redo}
           canUndo={Boolean(state.undoStacks[selected.id]?.length)}
@@ -197,7 +215,7 @@ export function BattleLibraryPage() {
                   aria-pressed={section === 'skills'}
                   onClick={() => {
                     setSection('skills');
-                    setEditing(true);
+                    openEditor();
                   }}
                 >
                   {t('skill.title')}
@@ -249,7 +267,7 @@ export function BattleLibraryPage() {
                 <BattleSettings key={selected!.id} data={data} onChanged={state.update} />
               </div>
               <div hidden={section !== 'skills'}>
-                <button className={primaryButtonClass} onClick={() => setEditing(true)}>
+                <button className={primaryButtonClass} onClick={openEditor}>
                   {t('skill.open')}
                 </button>
                 <p className="mt-2 text-sm text-text-secondary">{t('skill.fullscreenHint')}</p>

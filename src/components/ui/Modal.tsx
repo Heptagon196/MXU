@@ -20,7 +20,9 @@ interface ModalFocusTrapOptions {
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
     (element) =>
-      element.getAttribute('aria-hidden') !== 'true' && element.getClientRects().length > 0,
+      element.getAttribute('aria-hidden') !== 'true' &&
+      !element.closest('[inert]') &&
+      element.getClientRects().length > 0,
   );
 }
 

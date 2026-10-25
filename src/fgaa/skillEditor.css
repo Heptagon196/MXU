@@ -1,0 +1,347 @@
+/* The skill maker deliberately follows FGA, independently of MXU theme accents. */
+.fga-skill-editor {
+  --fga-surface: #f6fcff;
+  --fga-text: #182b31;
+  --fga-primary: #006b8f;
+  --fga-inactive: #dfe3e9;
+  background: var(--fga-surface);
+  color: var(--fga-text);
+  font-family: Roboto, 'Noto Sans', 'Microsoft YaHei UI', sans-serif;
+  font-size: 18px;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+.dark .fga-skill-editor {
+  --fga-surface: #101c20;
+  --fga-text: #e2eef2;
+  --fga-inactive: #3f484d;
+}
+.fga-skill-editor button {
+  cursor: pointer;
+  font: inherit;
+  transition: filter 0.12s;
+}
+.fga-skill-editor button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.fga-skill-editor button:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+.fga-skill-editor button:focus-visible {
+  outline: 3px solid #3498db;
+  outline-offset: 3px;
+}
+.fga-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 999px;
+  min-height: 48px;
+  padding: 10px 28px;
+  background: var(--fga-primary);
+  color: #fff;
+}
+.fga-large {
+  min-height: 80px;
+  min-width: 100px;
+}
+.fga-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: 50%;
+}
+.fga-editor-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 80px;
+  padding: 18px 28px;
+  flex-shrink: 0;
+}
+.fga-editor-header h1 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.fga-counter {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  line-height: 1.3;
+}
+.fga-enemies {
+  display: flex;
+  gap: 26px;
+}
+.fga-enemy {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  border: 0;
+  padding: 5px 0;
+  background: transparent;
+  color: inherit;
+}
+.fga-radio {
+  width: 23px;
+  height: 23px;
+  border: 2px solid #566168;
+  border-radius: 50%;
+}
+.fga-enemy[aria-pressed='true'] .fga-radio {
+  border-color: var(--fga-primary);
+  box-shadow: inset 0 0 0 4px var(--fga-surface);
+  background: var(--fga-primary);
+}
+.fga-editor-body {
+  padding: 8px 20px 16px;
+}
+.fga-history {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-height: 32px;
+  overflow-x: auto;
+}
+.fga-chip {
+  border: 0;
+  padding: 1px 5px;
+  background: #3498db;
+  color: #fff;
+  line-height: 1.25;
+  flex-shrink: 0;
+}
+.fga-chip[aria-pressed='true'] {
+  border-radius: 8px;
+  outline: 2px solid #9ca5aa;
+  outline-offset: 1px;
+}
+.fga-separator {
+  background: #616161;
+}
+.fga-history-position {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: inherit;
+  font-size: 13px !important;
+  border: 0;
+  background: transparent;
+}
+.fga-edit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.fga-master-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+.fga-master-skill {
+  background: #006064 !important;
+}
+.fga-command-spell {
+  background: #a03243;
+}
+.fga-attack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3498db;
+  color: #fff;
+  width: 100px;
+  height: 100px;
+  border: 0;
+  border-radius: 50%;
+  margin-right: 2px;
+}
+.fga-servant-groups {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: 0 6px;
+}
+.fga-skill-row {
+  display: flex;
+  gap: 12px;
+}
+.fga-skill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 18px;
+  color: #fff;
+}
+.fga-target {
+  white-space: pre-line;
+  width: 150px;
+  height: 94px;
+  font-size: 22px !important;
+}
+.fga-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--fga-primary);
+}
+.fga-special-targets {
+  text-align: center;
+  font-size: 14px;
+}
+.fga-special-targets > div {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 12px;
+  margin-top: 10px;
+}
+.fga-special-targets .fga-button {
+  min-height: 44px;
+  padding: 8px 20px;
+}
+.fga-np {
+  white-space: pre-line;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 82px;
+  height: 140px;
+  padding: 18px 16px;
+  white-space: pre-line;
+  max-width: 100px;
+  background: var(--fga-inactive);
+  color: inherit;
+  border: 0;
+  border-radius: 16px;
+}
+.fga-card-count {
+  min-width: 52px;
+  height: 50px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--fga-inactive);
+  color: inherit;
+}
+.fga-card-count[aria-pressed='true'] {
+  background: #3498db;
+  color: #fff;
+}
+.fga-swap {
+  background: #f57f17;
+}
+.fga-command-preview {
+  flex-shrink: 0;
+  padding: 4px 20px;
+  opacity: 0.6;
+}
+.fga-reset-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #0006;
+}
+.fga-reset-overlay section {
+  background: var(--fga-surface);
+  border-radius: 24px;
+  padding: 28px;
+}
+.fga-reset-overlay h2 {
+  margin-bottom: 24px;
+}
+.fga-reset-overlay section > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.fga-rotate-notice {
+  display: none;
+}
+@media (max-height: 500px) {
+  .fga-skill-editor {
+    font-size: 14px;
+  }
+  .fga-editor-header {
+    min-height: 48px;
+    padding: 6px 16px;
+  }
+  .fga-editor-body {
+    padding: 4px 12px 8px;
+  }
+  .fga-button {
+    min-height: 36px;
+    padding: 6px 18px;
+    gap: 8px;
+  }
+  .fga-history {
+    min-height: 24px;
+  }
+  .fga-skill {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  .fga-skill-row {
+    gap: 8px;
+  }
+  .fga-attack {
+    width: 68px;
+    height: 68px;
+  }
+  .fga-target {
+    white-space: pre-line;
+    width: 120px;
+    height: 65px;
+    font-size: 18px !important;
+  }
+  .fga-np {
+    white-space: pre-line;
+    height: 100px;
+    min-width: 65px;
+    padding: 12px;
+  }
+  .fga-card-count {
+    height: 38px;
+    min-width: 42px;
+  }
+}
+@media (pointer: coarse) and (orientation: portrait) {
+  .fga-rotate-notice {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: var(--fga-surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    text-align: center;
+    padding: 24px;
+  }
+}
+
+.fga-edit-toolbar .fga-button,
+.fga-editor-body .fga-button {
+  white-space: pre-line;
+}
