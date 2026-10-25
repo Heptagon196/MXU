@@ -27,6 +27,7 @@ export default {
       cancelled: 'Run cancelled',
       execution_error: 'Execution error; check logs',
       agent_busy: 'Agent is busy',
+      agent_output_closed: 'Agent output closed before a task result was received',
       no_servant_selected: 'No servant selected',
       embers_or_qp_exhausted: 'Not enough embers or QP',
       servant_max_level: 'Maximum level reached',

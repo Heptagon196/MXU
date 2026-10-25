@@ -236,6 +236,7 @@ pub(crate) fn spawn_child_output_reader<R: Read + Send + 'static>(
     thread::spawn(move || {
         let mut reader = BufReader::new(source);
         let mut buffer = Vec::new();
+        let mut fgaa_run = crate::fgaa_output::FgaaOutputRun::default();
         loop {
             buffer.clear();
             match reader.read_until(b'\n', &mut buffer) {
@@ -243,6 +244,9 @@ pub(crate) fn spawn_child_output_reader<R: Read + Send + 'static>(
                 Ok(_) => {
                     let line = String::from_utf8_lossy(&buffer);
                     let clean_line = line.trim_end();
+                    if stream == "stdout" {
+                        fgaa_run.observe(clean_line);
+                    }
                     log_file.write_line(stream, clean_line);
                     if stream == "stderr" {
                         warn!(target: "agent", "[{}][{}] {}", log_tag, stream, clean_line);
@@ -253,6 +257,17 @@ pub(crate) fn spawn_child_output_reader<R: Read + Send + 'static>(
                 }
                 Err(_) => break,
             }
+        }
+        if let Some(payload) = fgaa_run.closed_payload() {
+            // Drain final task events before reporting EOF/read failure. A completed
+            // run remains completed; only an unfinished run loses its transport.
+            batcher.flush();
+            emit_agent_output(
+                &batcher.app,
+                &batcher.instance_id,
+                "fgaa-output-closed",
+                &payload,
+            );
         }
     })
 }

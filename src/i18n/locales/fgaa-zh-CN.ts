@@ -27,6 +27,7 @@ export default {
       cancelled: '运行已取消',
       execution_error: '执行发生错误，请查看日志',
       agent_busy: '执行器正忙',
+      agent_output_closed: '执行器输出已中断，未收到任务结束结果',
       no_servant_selected: '尚未选择从者',
       embers_or_qp_exhausted: '种火或 QP 不足',
       servant_max_level: '已达到当前等级上限',

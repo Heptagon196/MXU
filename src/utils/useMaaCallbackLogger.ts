@@ -700,6 +700,10 @@ export function useMaaAgentLogger() {
 
     const handleAgentOutput = (instanceId: string, _stream: string, line: string) => {
       if (cancelled) return;
+      if (_stream === 'fgaa-output-closed') {
+        useFgaaRuntimeStore.getState().outputClosed(instanceId, line);
+        return;
+      }
       // Consume ordered FGA events before ordinary log flood suppression.
       line = useFgaaRuntimeStore.getState().consume(instanceId, line);
       if (!line) return;

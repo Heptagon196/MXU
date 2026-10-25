@@ -98,4 +98,25 @@ test('production event batches render localized runtime state through MXU WebSoc
   await expect(status).toBeHidden();
   await page.getByRole('tab', { name: '自动化', exact: true }).click();
   await expect(status.getByText('背包已满', { exact: true })).toBeVisible();
+  const interrupted = '22345678-1234-1234-1234-123456789abc';
+  send(
+    JSON.stringify({
+      ...JSON.parse(event('started', 1, { taskId: '中断测试', mode: 'FP' })),
+      runId: interrupted,
+    }),
+  );
+  await expect(status.getByText('运行中', { exact: true })).toBeVisible();
+  socket!.send(
+    JSON.stringify({
+      type: 'maa-agent-output',
+      payload: {
+        instance_id: instanceId,
+        stream: 'fgaa-output-closed',
+        line: JSON.stringify({ runId: interrupted, nativeTaskId: 5 }),
+      },
+    }),
+  );
+  await expect(
+    status.getByText('执行器输出已中断，未收到任务结束结果', { exact: true }),
+  ).toBeVisible();
 });

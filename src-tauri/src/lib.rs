@@ -1,4 +1,5 @@
 pub mod commands;
+mod fgaa_output;
 mod mxu_actions;
 pub mod screenshot_service;
 mod tray;
