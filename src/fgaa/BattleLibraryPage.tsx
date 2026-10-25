@@ -4,6 +4,7 @@ import { Copy, Download, Plus, Save, Upload } from 'lucide-react';
 import { TextInput } from '@/components/FormControls';
 import { exportFga, importFga } from './battleLibrary';
 import { useBattleStore } from './battleStore';
+import { SkillEditor } from './SkillEditor';
 
 const button =
   'inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs hover:bg-bg-hover disabled:opacity-40 disabled:cursor-not-allowed';
@@ -121,6 +122,20 @@ export function BattleLibraryPage() {
               <div className="flex gap-2">
                 <button
                   className={button}
+                  disabled={!state.undoStacks[selected!.id]?.length}
+                  onClick={state.undo}
+                >
+                  {t('skill.undo')}
+                </button>
+                <button
+                  className={button}
+                  disabled={!state.redoStacks[selected!.id]?.length}
+                  onClick={state.redo}
+                >
+                  {t('skill.redo')}
+                </button>
+                <button
+                  className={button}
                   onClick={() =>
                     state.add({
                       ...data,
@@ -170,12 +185,16 @@ export function BattleLibraryPage() {
                   onChange={(event) => state.update({ autoskill_notes: event.target.value })}
                 />
               </label>
+              <SkillEditor
+                key={selected!.id}
+                command={field('autoskill_cmd')}
+                onChanged={(value) => state.update({ autoskill_cmd: value })}
+              />
               <section className="rounded-lg border border-border bg-bg-secondary p-4">
                 <h2 className="text-sm font-medium">{t('command')}</h2>
                 <pre className="my-3 whitespace-pre-wrap break-all text-xs">
                   {field('autoskill_cmd') || t('noCommand')}
                 </pre>
-                <p className="text-xs text-text-muted">{t('editorPending')}</p>
               </section>
               <p className="text-xs text-text-muted">{t('localStorage')}</p>
             </div>
