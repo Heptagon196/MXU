@@ -1,3 +1,4 @@
+import { primaryButtonClass } from '@/components/FormControls';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SwitchInput } from '@/components/FormControls';
@@ -68,11 +69,11 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
               <p className="mb-4 text-sm text-text-secondary">
                 {t(`chaldeaSettings.${group}Detail`)}
               </p>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="divide-y divide-border">
                 {keys.map((key) => (
                   <label
                     key={key}
-                    className="flex items-center justify-between gap-4 py-2 text-sm text-text-primary"
+                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0 text-sm text-text-primary"
                   >
                     {t(`chaldeaSettings.fields.${key}`)}
                     <SwitchInput
@@ -89,7 +90,7 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
           ))}
           <button
             disabled={status === 'saving' || status === 'loading'}
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-60 disabled:cursor-not-allowed"
+            className={primaryButtonClass}
             type="submit"
           >
             {t('chaldeaSettings.save')}

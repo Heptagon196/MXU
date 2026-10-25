@@ -38,7 +38,10 @@ const switchThumb = (value: boolean) =>
 export const formInputClass =
   'px-3 py-1.5 text-sm rounded-md border border-border bg-bg-secondary text-text-primary focus:outline-none focus:ring-1 focus:border-accent focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed';
 export const formButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors bg-bg-secondary text-text-primary enabled:hover:bg-bg-hover aria-pressed:bg-accent/10 aria-pressed:text-accent aria-pressed:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60 disabled:cursor-not-allowed';
+
+export const primaryButtonClass =
+  'inline-flex items-center justify-center gap-2 rounded-lg border border-transparent bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors enabled:hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary disabled:opacity-60 disabled:cursor-not-allowed';
 
 /** Native form semantics, with the same track/thumb as MXU's SwitchButton. */
 export function SwitchInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {

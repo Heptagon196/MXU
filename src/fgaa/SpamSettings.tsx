@@ -1,3 +1,5 @@
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
+import { SelectInput } from '@/components/ui/SelectInput';
 import { formButtonClass } from '@/components/FormControls';
 import { formInputClass } from '@/components/FormControls';
 import { CheckboxInput } from '@/components/FormControls';
@@ -35,35 +37,35 @@ function ActionSettings({
       <legend className="px-1 text-sm font-medium">{title}</legend>
       <label className="flex flex-wrap items-center gap-2 text-sm">
         {t('spam.mode')}
-        <select
-          className={control}
+        <SelectInput
+          className="min-w-20"
           aria-label={t('spam.mode')}
           value={value.spam}
-          onChange={(event) => onChanged({ spam: event.target.value })}
+          onValueChange={(value) => onChanged({ spam: value })}
         >
           {spamModes.map((mode) => (
             <option key={mode} value={mode}>
               {t(`spam.modes.${mode}`)}
             </option>
           ))}
-        </select>
+        </SelectInput>
       </label>
       <fieldset disabled={value.spam === 'None'} className="space-y-3 disabled:opacity-50">
         {skill && (
           <label className="flex flex-wrap items-center gap-2 text-sm">
             {t('spam.target')}
-            <select
-              className={control}
+            <SelectInput
+              className="min-w-20"
               aria-label={t('spam.target')}
               value={value.target}
-              onChange={(event) => onChanged({ target: event.target.value })}
+              onValueChange={(value) => onChanged({ target: value })}
             >
               {spamTargets.map((target) => (
                 <option key={target} value={target}>
                   {t(`spam.targets.${target}`)}
                 </option>
               ))}
-            </select>
+            </SelectInput>
           </label>
         )}
         <div className="flex flex-wrap gap-3">
@@ -129,8 +131,7 @@ export function SpamSettings({
   }
   const current = values;
   return (
-    <details className="rounded-lg border border-border p-4">
-      <summary className="cursor-pointer text-sm font-semibold">{t('spam.title')}</summary>
+    <CollapsibleSection title={t('spam.title')}>
       <div className="mt-4 space-y-4">
         {!current ? (
           <>
@@ -175,6 +176,6 @@ export function SpamSettings({
           </>
         )}
       </div>
-    </details>
+    </CollapsibleSection>
   );
 }

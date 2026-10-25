@@ -1,4 +1,4 @@
-import { formInputClass } from '@/components/FormControls';
+import { SelectInput } from '@/components/ui/SelectInput';
 import { formButtonClass } from '@/components/FormControls';
 import { CheckboxInput } from '@/components/FormControls';
 import { useMemo, useRef, useState } from 'react';
@@ -204,7 +204,8 @@ export function SkillEditor({
         {plan.map((_, i) => (
           <button
             key={i}
-            className={`${button} ${wave === i ? 'text-accent bg-bg-active' : ''}`}
+            className={button}
+            aria-pressed={wave === i}
             onClick={() => {
               setWave(i);
               setTurn(0);
@@ -219,7 +220,8 @@ export function SkillEditor({
         {plan[wave].map((_, i) => (
           <button
             key={i}
-            className={`${button} ${turn === i ? 'text-accent bg-bg-active' : ''}`}
+            className={button}
+            aria-pressed={turn === i}
             onClick={() => {
               setTurn(i);
               setCursor(null);
@@ -311,31 +313,33 @@ export function SkillEditor({
       <div className="flex flex-wrap items-center gap-2">
         <label className="text-xs">
           {t('skill.front')}{' '}
-          <select
-            className={formInputClass}
+          <SelectInput
+            className="min-w-20"
+            aria-label={t('skill.front')}
             value={starting}
-            onChange={(e) => setStarting(e.target.value)}
+            onValueChange={(value) => setStarting(value)}
           >
             {[1, 2, 3].map((i) => (
               <option key={i} value={String(i)}>
                 {i}
               </option>
             ))}
-          </select>
+          </SelectInput>
         </label>
         <label className="text-xs">
           {t('skill.reserve')}{' '}
-          <select
-            className={formInputClass}
+          <SelectInput
+            className="min-w-20"
+            aria-label={t('skill.reserve')}
             value={reserve}
-            onChange={(e) => setReserve(e.target.value)}
+            onValueChange={(value) => setReserve(value)}
           >
             {[1, 2, 3].map((i) => (
               <option key={i} value={String(i)}>
                 {i + 3}
               </option>
             ))}
-          </select>
+          </SelectInput>
         </label>
         <button
           className={button}
@@ -361,17 +365,18 @@ export function SkillEditor({
         </div>
         <label className="block text-xs">
           {t('skill.beforeNp')}{' '}
-          <select
-            className={formInputClass}
+          <SelectInput
+            className="min-w-20"
+            aria-label={t('skill.beforeNp')}
             value={cards}
-            onChange={(e) => setCards(Number(e.target.value))}
+            onValueChange={(value) => setCards(Number(value))}
           >
             {[0, 1, 2].map((i) => (
               <option key={i} value={i}>
                 {i}
               </option>
             ))}
-          </select>
+          </SelectInput>
         </label>
         <div className="flex flex-wrap gap-2">
           <button className={`${button} text-accent`} onClick={() => attack(false)}>

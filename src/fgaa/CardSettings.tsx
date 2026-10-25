@@ -1,5 +1,6 @@
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
+import { SelectInput } from '@/components/ui/SelectInput';
 import { formButtonClass } from '@/components/FormControls';
-import { formInputClass } from '@/components/FormControls';
 import { CheckboxInput } from '@/components/FormControls';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,6 @@ import {
 } from './cardPolicy';
 
 const button = formButtonClass;
-const control = formInputClass;
 
 function Priority({
   source,
@@ -128,14 +128,12 @@ function WaveFlags({
         <div key={i} className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm">
             {t('skill.wave', { number: i + 1 })}
-            <select
-              className={control}
+            <SelectInput
+              className="min-w-20"
               aria-label={t('skill.wave', { number: i + 1 })}
               value={value}
-              onChange={(event) =>
-                onChanged(
-                  rows.map((old, index) => (index === i ? event.target.value : old)).join(','),
-                )
+              onValueChange={(value) =>
+                onChanged(rows.map((old, index) => (index === i ? value : old)).join(','))
               }
             >
               {options.map((option) => (
@@ -144,7 +142,7 @@ function WaveFlags({
                 </option>
               ))}
               {!options.includes(value) && <option value={value}>{value}</option>}
-            </select>
+            </SelectInput>
           </label>
           <button
             className={button}
@@ -175,8 +173,7 @@ export function CardSettings({
   const { t } = useTranslation('fgaa');
   const shuffle = String(data.shuffle_cards ?? 'None');
   return (
-    <details className="rounded-lg border border-border p-4">
-      <summary className="cursor-pointer text-sm font-semibold">{t('cards.title')}</summary>
+    <CollapsibleSection title={t('cards.title')}>
       <div className="mt-4 space-y-5">
         <fieldset className="space-y-2">
           <legend className="mb-2 text-sm font-medium">{t('cards.priority')}</legend>
@@ -223,11 +220,11 @@ export function CardSettings({
         </fieldset>
         <label className="flex flex-wrap items-center gap-2 text-sm">
           {t('cards.shuffle')}
-          <select
-            className={control}
+          <SelectInput
+            className="min-w-20"
             aria-label={t('cards.shuffle')}
             value={shuffle}
-            onChange={(event) => onChanged({ shuffle_cards: event.target.value })}
+            onValueChange={(value) => onChanged({ shuffle_cards: value })}
           >
             {['None', 'NoEffective', 'NoNPMatching'].map((value) => (
               <option key={value} value={value}>
@@ -237,16 +234,16 @@ export function CardSettings({
             {!['None', 'NoEffective', 'NoNPMatching'].includes(shuffle) && (
               <option value={shuffle}>{shuffle}</option>
             )}
-          </select>
+          </SelectInput>
         </label>
         <label className="flex items-center gap-2 text-sm">
           {t('cards.shuffleWave')}
-          <select
-            className={control}
+          <SelectInput
+            className="min-w-20"
             aria-label={t('cards.shuffleWave')}
             disabled={shuffle === 'None'}
             value={String(data.shuffle_cards_wave ?? 3)}
-            onChange={(event) => onChanged({ shuffle_cards_wave: Number(event.target.value) })}
+            onValueChange={(value) => onChanged({ shuffle_cards_wave: Number(value) })}
           >
             {[1, 2, 3].map((value) => (
               <option key={value} value={value}>
@@ -258,9 +255,9 @@ export function CardSettings({
                 {String(data.shuffle_cards_wave)}
               </option>
             )}
-          </select>
+          </SelectInput>
         </label>
       </div>
-    </details>
+    </CollapsibleSection>
   );
 }

@@ -1,3 +1,4 @@
+import { primaryButtonClass } from '@/components/FormControls';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
@@ -65,7 +66,10 @@ export function GlobalSettingsPage() {
         <p role="status">{t('globals.loading')}</p>
       ) : blocked ? (
         <div role="alert">
-          {t('globals.blocked')} <button onClick={retry}>{t('globals.retry')}</button>
+          {t('globals.blocked')}{' '}
+          <button className={formButtonClass} onClick={retry}>
+            {t('globals.retry')}
+          </button>
         </div>
       ) : (
         <form
@@ -90,11 +94,11 @@ export function GlobalSettingsPage() {
         >
           {Object.entries(globalGroups).map(([group, keys]) => (
             <SettingsGroup key={group} title={t(`globals.groups.${group}`)} disabled={saving}>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="divide-y divide-border">
                 {keys.map((key) => (
                   <label
                     key={key}
-                    className="flex items-center justify-between gap-4 py-2 text-sm text-text-primary"
+                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0 text-sm text-text-primary"
                   >
                     <span>{t(`globals.fields.${key}`)}</span>
                     {typeof values[key] === 'boolean' ? (
@@ -116,11 +120,7 @@ export function GlobalSettingsPage() {
               </div>
             </SettingsGroup>
           ))}
-          <button
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-            type="submit"
-            disabled={saving}
-          >
+          <button className={primaryButtonClass} type="submit" disabled={saving}>
             {t('globals.save')}
           </button>
           <p role="status">

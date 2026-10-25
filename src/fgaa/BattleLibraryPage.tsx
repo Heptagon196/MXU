@@ -1,3 +1,5 @@
+import { primaryButtonClass } from '@/components/FormControls';
+import { SelectInput } from '@/components/ui/SelectInput';
 import { formButtonClass, formInputClass } from '@/components/FormControls';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -63,7 +65,7 @@ export function BattleLibraryPage() {
           {t('import')}
         </button>
         <button
-          className={`${button} bg-accent text-white`}
+          className={primaryButtonClass}
           disabled={state.blocked || state.saving || !state.dirty}
           onClick={state.save}
         >
@@ -143,7 +145,7 @@ export function BattleLibraryPage() {
             <p className="text-sm text-text-muted">{t('empty')}</p>
           ) : (
             <div className="mx-auto max-w-3xl space-y-5">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   className={button}
                   disabled={!state.undoStacks[selected!.id]?.length}
@@ -201,11 +203,11 @@ export function BattleLibraryPage() {
               <div hidden={section !== 'settings'} className="space-y-5">
                 <label className="block space-y-2 text-xs text-text-secondary">
                   {t('party')}
-                  <select
+                  <SelectInput
                     aria-label={t('party')}
-                    className={`${formInputClass} block w-full`}
+                    className="w-full"
                     value={party}
-                    onChange={(event) => state.update({ autoskill_party: event.target.value })}
+                    onValueChange={(value) => state.update({ autoskill_party: value })}
                   >
                     <option value="-1">{t('currentParty')}</option>
                     {Array.from({ length: 15 }, (_, i) => (
@@ -216,7 +218,7 @@ export function BattleLibraryPage() {
                     {!Array.from({ length: 16 }, (_, i) => String(i - 1)).includes(party) && (
                       <option value={party}>{t('unknownParty', { value: party })}</option>
                     )}
-                  </select>
+                  </SelectInput>
                 </label>
                 <label className="block space-y-2 text-xs text-text-secondary">
                   {t('notes')}

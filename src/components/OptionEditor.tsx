@@ -958,12 +958,16 @@ function useDropdownPosition({
   useEffect(() => {
     if (!open) return;
 
+    const openedRect = triggerRef.current?.getBoundingClientRect();
     const handleScroll = (event: Event) => {
       const target = event.target;
       // 菜单内部滚动不影响展开状态；祖先面板滚动时关闭，避免浮层脱离任务。
       if (target instanceof Node && menuRef.current?.contains(target)) return;
       if (target instanceof Node && triggerRef.current && target.contains(triggerRef.current)) {
-        onClose();
+        const rect = triggerRef.current.getBoundingClientRect();
+        // Focus/click can queue a scroll event before the menu opens. Ignore it
+        // when the trigger has not moved since we positioned the menu.
+        if (!openedRect || rect.top !== openedRect.top || rect.left !== openedRect.left) onClose();
       }
     };
 
@@ -998,6 +1002,7 @@ function useDropdownPosition({
 }
 
 interface OptionSelectDropdownProps {
+  'aria-label'?: string;
   value: string;
   options: { value: string; label: string; icon?: string }[];
   disabled?: boolean;
@@ -1006,7 +1011,8 @@ interface OptionSelectDropdownProps {
   onChange: (value: string) => void;
 }
 
-function OptionSelectDropdown({
+export function OptionSelectDropdown({
+  'aria-label': ariaLabel,
   value,
   options,
   disabled = false,
@@ -1055,7 +1061,7 @@ function OptionSelectDropdown({
       );
       setActiveIndex(index);
       setTimeout(() => {
-        listboxRef.current?.focus();
+        listboxRef.current?.focus({ preventScroll: true });
       }, 0);
     }
   }, [open, disabled, options, value]);
@@ -1065,7 +1071,12 @@ function OptionSelectDropdown({
     if (!open || !listboxRef.current) return;
     const activeElement = listboxRef.current.querySelector(`[data-index="${activeIndex}"]`);
     if (activeElement) {
-      activeElement.scrollIntoView({ block: 'nearest' });
+      const menu = listboxRef.current;
+      const item = activeElement as HTMLElement;
+      // Scroll only the menu; scrolling an ancestor closes the overlay.
+      if (item.offsetTop < menu.scrollTop) menu.scrollTop = item.offsetTop;
+      else if (item.offsetTop + item.offsetHeight > menu.scrollTop + menu.clientHeight)
+        menu.scrollTop = item.offsetTop + item.offsetHeight - menu.clientHeight;
     }
   }, [activeIndex, open]);
 
@@ -1141,6 +1152,8 @@ function OptionSelectDropdown({
         }}
         onKeyDown={handleTriggerKeyDown}
         role="button"
+        aria-label={ariaLabel}
+        value={value}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listboxId}
@@ -1190,6 +1203,7 @@ function OptionSelectDropdown({
                   id={optionId}
                   type="button"
                   data-index={index}
+                  data-value={opt.value}
                   onClick={() => {
                     onChange(opt.value);
                     closeAndFocusTrigger();

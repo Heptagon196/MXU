@@ -1,3 +1,5 @@
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
+import { SelectInput } from '@/components/ui/SelectInput';
 import { formInputClass } from '@/components/FormControls';
 import { CheckboxInput } from '@/components/FormControls';
 import { useState } from 'react';
@@ -75,12 +77,12 @@ export function BattleSettings({
     return (
       <label className="block space-y-2 text-sm" key={field}>
         <span>{t(`settings.${field}`)}</span>
-        <select
+        <SelectInput
           aria-label={t(`settings.${field}`)}
-          className={control}
+          className="min-w-20"
           value={value}
           disabled={disabled}
-          onChange={(event) => onChanged({ [field]: event.target.value })}
+          onValueChange={(value) => onChanged({ [field]: value })}
         >
           {options.map((option) => (
             <option key={option} value={option}>
@@ -90,7 +92,7 @@ export function BattleSettings({
           {!options.includes(value) && (
             <option value={value}>{t('unknownParty', { value })}</option>
           )}
-        </select>
+        </SelectInput>
       </label>
     );
   };
@@ -113,8 +115,7 @@ export function BattleSettings({
         source={data.spam_x as string | undefined}
         onChanged={(value) => onChanged({ spam_x: value })}
       />
-      <details open className="rounded-lg border border-border p-4">
-        <summary className="cursor-pointer text-sm font-semibold">{t('settings.battle')}</summary>
+      <CollapsibleSection open title={t('settings.battle')}>
         <div className="mt-4 space-y-4">
           {choice('battle_config_server', '', [
             '',
@@ -139,9 +140,8 @@ export function BattleSettings({
             data.add_raid_delay !== true,
           )}
         </div>
-      </details>
-      <details open className="rounded-lg border border-border p-4">
-        <summary className="cursor-pointer text-sm font-semibold">{t('settings.support')}</summary>
+      </CollapsibleSection>
+      <CollapsibleSection open title={t('settings.support')}>
         <div className="mt-4 space-y-4">
           {choice('autoskill_support_class', 'None', [
             'None',
@@ -178,7 +178,7 @@ export function BattleSettings({
             {choice('support_bond_ce_effect', 'Ignore', ['Ignore', 'Default', 'NP'])}
           </fieldset>
         </div>
-      </details>
+      </CollapsibleSection>
     </div>
   );
 }

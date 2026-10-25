@@ -1,5 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
+
+async function choose(page: Page, trigger: Locator, value: string) {
+  await trigger.click();
+  await page.getByRole('listbox').locator(`[role="option"][data-value="${value}"]`).click();
+}
 
 test('feature tabs retain a saved FGA library and export unknown fields intact', async ({
   page,
@@ -68,7 +73,7 @@ test('skill board preserves repeated targets, NP order and undo across tabs', as
   await expect(command).toHaveText('a(11)');
   await page.getByRole('button', { name: '宝具 3', exact: true }).click();
   await page.getByRole('button', { name: '宝具 1', exact: true }).click();
-  await page.getByLabel('宝具前普通卡数').selectOption('1');
+  await choose(page, page.getByLabel('宝具前普通卡数'), '1');
   await page.getByRole('button', { name: '出牌 → 下一波次', exact: true }).click();
   await expect(command).toHaveText('a(11)64n1,#,');
   await page.getByRole('tab', { name: 'Chaldea', exact: true }).click();
@@ -142,7 +147,7 @@ test('battle settings export original FGA types and retain inactive support valu
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await page.getByRole('button', { name: '新建配置', exact: true }).click();
   await page.getByRole('button', { name: '战斗设置', exact: true }).click();
-  await page.getByLabel('出战队伍', { exact: true }).selectOption('14');
+  await choose(page, page.getByLabel('出战队伍', { exact: true }), '14');
   await page.getByText('指令卡与洗牌', { exact: true }).click();
   const cards = page.getByRole('group', { name: '指令卡优先级', exact: true });
   await cards.getByRole('button', { name: '上移 克制 Arts', exact: true }).click();
@@ -152,47 +157,54 @@ test('battle settings export original FGA types and retain inactive support valu
   const servants = page.getByRole('group', { name: '从者优先级', exact: true });
   await servants.getByRole('button', { name: '上移 队伍位置 2', exact: true }).click();
   const brave = page.getByRole('group', { name: 'Brave Chain', exact: true });
-  await brave.getByRole('combobox', { name: '波次 1', exact: true }).selectOption('WithNP');
+  await choose(page, brave.getByRole('button', { name: '波次 1', exact: true }), 'WithNP');
   await brave.getByRole('button', { name: '新增波次', exact: true }).click();
-  await brave.getByRole('combobox', { name: '波次 2', exact: true }).selectOption('Avoid');
-  await page
-    .getByRole('group', { name: '指令卡重排', exact: true })
-    .getByRole('combobox')
-    .selectOption('T');
-  await page.getByLabel('洗牌条件', { exact: true }).selectOption('NoNPMatching');
-  await page.getByLabel('洗牌波次', { exact: true }).selectOption('2');
+  await choose(page, brave.getByRole('button', { name: '波次 2', exact: true }), 'Avoid');
+  await choose(
+    page,
+    page
+      .getByRole('group', { name: '指令卡重排', exact: true })
+      .getByRole('button', { name: '波次 1', exact: true }),
+    'T',
+  );
+  await choose(page, page.getByLabel('洗牌条件', { exact: true }), 'NoNPMatching');
+  await choose(page, page.getByLabel('洗牌波次', { exact: true }), '2');
   await page.getByText('技能与宝具连发', { exact: true }).click();
   const skillSpam = page.getByRole('group', { name: '技能 1', exact: true });
-  await skillSpam.getByRole('combobox', { name: '触发条件', exact: true }).selectOption('Danger');
-  await skillSpam.getByRole('combobox', { name: '技能目标', exact: true }).selectOption('Self');
+  await choose(page, skillSpam.getByRole('button', { name: '触发条件', exact: true }), 'Danger');
+  await choose(page, skillSpam.getByRole('button', { name: '技能目标', exact: true }), 'Self');
   await skillSpam.getByRole('checkbox', { name: '波次 1', exact: true }).uncheck();
   await skillSpam.getByRole('button', { name: '添加波次', exact: true }).click();
-  await skillSpam.getByRole('combobox', { name: '触发条件', exact: true }).selectOption('None');
-  await expect(skillSpam.getByRole('combobox', { name: '技能目标', exact: true })).toHaveValue(
+  await choose(page, skillSpam.getByRole('button', { name: '触发条件', exact: true }), 'None');
+  await expect(skillSpam.getByRole('button', { name: '技能目标', exact: true })).toHaveAttribute(
+    'value',
     'Self',
   );
-  await expect(skillSpam.getByRole('combobox', { name: '技能目标', exact: true })).toBeDisabled();
+  await expect(skillSpam.getByRole('button', { name: '技能目标', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: '队伍位置 6', exact: true }).click();
-  await page
-    .getByRole('group', { name: '宝具', exact: true })
-    .getByRole('combobox', { name: '触发条件', exact: true })
-    .selectOption('Spam');
-  await page.getByLabel('配置区服', { exact: true }).selectOption('Cn');
+  await choose(
+    page,
+    page
+      .getByRole('group', { name: '宝具', exact: true })
+      .getByRole('button', { name: '触发条件', exact: true }),
+    'Spam',
+  );
+  await choose(page, page.getByLabel('配置区服', { exact: true }), 'Cn');
   await page.getByRole('searchbox', { name: '搜索素材' }).fill('Bone');
   await page.getByRole('checkbox', { name: '凶骨', exact: true }).check();
   await page.getByRole('searchbox', { name: '搜索素材' }).fill('英雄');
   await page.getByRole('checkbox', { name: '英雄之证', exact: true }).check();
   await page.getByRole('button', { name: '移除 英雄之证', exact: true }).click();
   await page.getByLabel('启用 Raid 回合延时', { exact: true }).check();
-  await page.getByLabel('回合延时（秒）', { exact: true }).selectOption('7');
+  await choose(page, page.getByLabel('回合延时（秒）', { exact: true }), '7');
   await page.getByLabel('自动选择敌方目标', { exact: true }).check();
-  await page.getByLabel('助战职阶', { exact: true }).selectOption('Caster');
+  await choose(page, page.getByLabel('助战职阶', { exact: true }), 'Caster');
   await page.getByLabel('同时检查全部职阶', { exact: true }).check();
   await page.getByLabel('从者匹配项', { exact: true }).fill('servant-a\nservant-b\nservant-a');
   await page.getByRole('button', { name: '应用匹配项', exact: true }).first().click();
   await page.getByLabel('礼装必须满破', { exact: true }).check();
-  await page.getByLabel('羁绊礼装效果', { exact: true }).selectOption('NP');
-  await page.getByLabel('助战选择方式', { exact: true }).selectOption('Manual');
+  await choose(page, page.getByLabel('羁绊礼装效果', { exact: true }), 'NP');
+  await choose(page, page.getByLabel('助战选择方式', { exact: true }), 'Manual');
   await expect(page.getByLabel('礼装必须满破', { exact: true })).toBeDisabled();
   await expect(page.getByLabel('礼装必须满破', { exact: true })).toBeChecked();
   await page.getByRole('button', { name: '保存配置库', exact: true }).click();
@@ -230,8 +242,8 @@ test('battle settings export original FGA types and retain inactive support valu
   await page.reload();
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await page.getByRole('button', { name: '战斗设置', exact: true }).click();
-  await expect(page.getByLabel('回合延时（秒）', { exact: true })).toHaveValue('7');
-  await page.getByLabel('助战选择方式', { exact: true }).selectOption('Preferred');
+  await expect(page.getByLabel('回合延时（秒）', { exact: true })).toHaveAttribute('value', '7');
+  await choose(page, page.getByLabel('助战选择方式', { exact: true }), 'Preferred');
   await expect(page.getByLabel('从者匹配项', { exact: true })).toHaveValue('servant-a\nservant-b');
   await expect(page.getByRole('button', { name: '移除 凶骨', exact: true })).toBeVisible();
   await page.getByRole('searchbox', { name: '搜索素材' }).scrollIntoViewIfNeeded();
@@ -262,4 +274,32 @@ test('material selection preserves unknown imported identifiers', async ({ page 
     'FutureMaterial',
     'Bone',
   ]);
+});
+
+test('MXU dropdown keyboard navigation and viewport placement', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
+  await page.goto('/');
+  await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+  await page.getByRole('button', { name: '新建配置', exact: true }).click();
+  await page.setViewportSize({ width: 640, height: 360 });
+  const trigger = page.getByLabel('宝具前普通卡数', { exact: true });
+  await trigger.focus();
+  await trigger.press('ArrowDown');
+  const menu = page.getByRole('listbox');
+  await expect(menu).toBeVisible();
+  await menu.press('End');
+  await menu.press('Enter');
+  await expect(trigger).toHaveAttribute('value', '2');
+  await expect(trigger).toBeFocused();
+  await trigger.press('ArrowDown');
+  await expect(menu).toBeVisible();
+  const box = await menu.boundingBox();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(640);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(360);
+  await page.screenshot({ path: 'test-results/fgaa-mxu-dropdown.png', animations: 'disabled' });
+  await menu.press('Escape');
+  await expect(menu).toHaveCount(0);
+  await expect(trigger).toBeFocused();
 });
