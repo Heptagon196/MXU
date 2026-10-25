@@ -7,6 +7,7 @@ import { ProductSettingsPage, type SettingsSection } from './ProductSettingsPage
 import { useBattleStore } from './battleStore';
 import { useAppStore } from '@/stores/appStore';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
+import { RuntimeStatus } from './RuntimeStatus';
 import { withBattleChoices, taskOptionKey, refillResources } from './taskInterface';
 
 const pages = [
@@ -123,7 +124,10 @@ export function ProductShell({ children }: { children: ReactNode }) {
         hidden={page !== 'automation'}
         className="flex-1 min-h-0"
       >
-        {children}
+        <div className="h-full flex flex-col">
+          <RuntimeStatus />
+          <div className="flex-1 min-h-0">{children}</div>
+        </div>
       </div>
       <div
         id="fgaa-page-battle"

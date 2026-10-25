@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { maaService, type MaaCallbackDetails } from '@/services/maaService';
 import { useAppStore, type LogType } from '@/stores/appStore';
+import { useFgaaRuntimeStore } from '@/stores/fgaaRuntimeStore';
 import { loggers } from '@/utils/logger';
 import i18n, { getInterfaceLangKey } from '@/i18n';
 import { getMxuSpecialTask } from '@/types/specialTasks';
@@ -699,6 +700,9 @@ export function useMaaAgentLogger() {
 
     const handleAgentOutput = (instanceId: string, _stream: string, line: string) => {
       if (cancelled) return;
+      // Consume ordered FGA events before ordinary log flood suppression.
+      line = useFgaaRuntimeStore.getState().consume(instanceId, line);
+      if (!line) return;
 
       const state = ensureAgentFloodState(instanceId);
       const now = Date.now();
