@@ -395,6 +395,8 @@ export default {
     'The FGA-style skill editor is being migrated. Existing commands and all other settings are preserved.',
   localStorage: 'Stored in this client; export .fga files for backup.',
   retry: 'Reload',
+  queuedSnapshot:
+    'Queued tasks keep their launch-time configuration. Stop the queue to edit parameters; battle and global setting changes apply on the next launch.',
   saveFailed:
     'Save failed; your edits are retained. Retry saving, or reload a changed file while retaining this draft.',
   recoveryHint:

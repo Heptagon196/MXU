@@ -2,6 +2,79 @@ import { test, expect, type WebSocketRoute } from '@playwright/test';
 import { createFgaInterface } from '../src/fgaa/taskInterface';
 import zh from '../src/i18n/locales/fgaa-zh-CN';
 
+test('queued FGA task parameters remain locked to the submitted snapshot', async ({ page }) => {
+  const pi = createFgaInterface();
+  pi.languages = { zh_cn: 'i18n/zh-CN.json' };
+  const flatten = (value: object, prefix = '', output: Record<string, string> = {}) => {
+    for (const [key, item] of Object.entries(value)) {
+      const name = prefix ? `${prefix}.${key}` : key;
+      if (typeof item === 'string') output[name] = item;
+      else flatten(item, name, output);
+    }
+    return output;
+  };
+  await page.route('**/api/interface', (route) => route.fulfill({ status: 404 }));
+  await page.route('**/interface.json', (route) => route.fulfill({ json: pi }));
+  await page.route('**/i18n/zh-CN.json', (route) => route.fulfill({ json: flatten(zh) }));
+  await page.route('**/api/maa/state', (route) =>
+    route.fulfill({
+      json: {
+        instances: {
+          'queued-instance': {
+            connected: true,
+            resource_loaded: true,
+            tasker_inited: true,
+            is_running: true,
+            task_run_state: {
+              statuses: { 'queued-task': 'pending' },
+              mappings: { '8': 'queued-task' },
+              pending_task_ids: [8],
+              current_task_index: 0,
+              overall_status: 'running',
+            },
+          },
+        },
+        cached_adb_devices: [],
+        cached_win32_windows: [],
+        cached_wlroots_sockets: [],
+        cached_gamescope_instances: [],
+      },
+    }),
+  );
+  await page.addInitScript(() => {
+    localStorage.setItem('mxu-language', 'zh-CN');
+    localStorage.setItem(
+      'mxu-config-FGAA',
+      JSON.stringify({
+        version: '1.0',
+        instances: [
+          {
+            id: 'queued-instance',
+            name: '队列测试',
+            tasks: [
+              {
+                id: 'queued-task',
+                taskName: 'FGAA.FP',
+                enabled: true,
+                expanded: true,
+                optionValues: {},
+              },
+            ],
+          },
+        ],
+        settings: { language: 'zh-CN' },
+        lastActiveInstanceId: 'queued-instance',
+      }),
+    );
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: '跳过（DEV）', exact: true }).click();
+  await expect(page.getByText(zh.queuedSnapshot, { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('switch', { name: '限制友情点召唤次数', exact: true }),
+  ).toBeDisabled();
+});
+
 test('production event batches render localized runtime state through MXU WebSocket', async ({
   page,
 }) => {

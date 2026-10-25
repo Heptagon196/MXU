@@ -12,9 +12,7 @@ import type {
 } from '@/types/interface';
 import { isMxuSpecialTask, getMxuSpecialTask } from '@/types/specialTasks';
 import { loggers } from './logger';
-import { fgaTaskOverride } from '@/fgaa/taskInterface';
-import { snapshotGlobals } from '@/stores/fgaaSettingsStore';
-import { useBattleStore } from '@/fgaa/battleStore';
+import { currentFgaTaskSnapshot } from '@/fgaa/taskSnapshot';
 import { findSwitchCase } from './optionHelpers';
 import { createDefaultOptionValue, sanitizeOptionValue } from '@/stores/helpers';
 
@@ -531,9 +529,7 @@ export const generateTaskPipelineOverride = (
   globalOptionValues?: Record<string, OptionValue>,
 ): string => {
   if (projectInterface?.name === 'FGAA' && selectedTask.taskName.startsWith('FGAA.')) {
-    if (useBattleStore.getState().blocked)
-      throw new Error('FGA battle library could not be loaded');
-    return fgaTaskOverride(selectedTask, projectInterface, snapshotGlobals());
+    return currentFgaTaskSnapshot(selectedTask, projectInterface);
   }
   // 处理 MXU 内置特殊任务
   if (isMxuSpecialTask(selectedTask.taskName)) {

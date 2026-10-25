@@ -99,9 +99,51 @@ test('native stores migrate once, retain edits on IO failure and preserve edits 
   assert.notEqual(restored[1].id, restored[0].id);
   await useBattleStore.getState().save();
   assert.equal(JSON.parse(disk.get('library')!).entries.length, 2);
+  useFgaaSettingsStore.setState({ blocked: false });
+  const { currentFgaTaskSnapshot } = await import('../src/fgaa/taskSnapshot');
+  const { createFgaInterface, withBattleChoices, taskOptionKey } =
+    await import('../src/fgaa/taskInterface');
+  const staleInterface = withBattleChoices(createFgaInterface(), useBattleStore.getState().library);
+  const selected = {
+    id: 'run-current',
+    taskName: 'FGAA.Battle',
+    enabled: true,
+    expanded: true,
+    optionValues: {
+      [taskOptionKey('Battle', 'battle_config')]: {
+        type: 'select' as const,
+        caseName: restored[1].id,
+      },
+    },
+  };
+  useBattleStore.getState().update({ autoskill_cmd: 'a1' });
+  const snapshot = currentFgaTaskSnapshot(selected, staleInterface);
+  assert.equal(
+    JSON.parse(snapshot)[0].FGAA_Battle.custom_action_param.battleConfig.autoskill_cmd,
+    'a1',
+  );
+  useBattleStore.getState().update({ autoskill_cmd: 'b2' });
+  assert.equal(
+    JSON.parse(snapshot)[0].FGAA_Battle.custom_action_param.battleConfig.autoskill_cmd,
+    'a1',
+  );
+  assert.equal(
+    JSON.parse(currentFgaTaskSnapshot(selected, staleInterface))[0].FGAA_Battle.custom_action_param
+      .battleConfig.autoskill_cmd,
+    'b2',
+  );
+  useBattleStore.setState({ loading: true });
+  assert.throws(() => currentFgaTaskSnapshot(selected, staleInterface), /could not be loaded/);
+  useBattleStore.setState({ loading: false });
   const beforeCorruption = useBattleStore.getState().library;
   disk.set('library', 'broken');
   await useBattleStore.getState().retry();
   assert.equal(useBattleStore.getState().blocked, true);
   assert.equal(useBattleStore.getState().library, beforeCorruption);
+  assert.throws(() => currentFgaTaskSnapshot(selected, staleInterface), /could not be loaded/);
+  useBattleStore.setState({ blocked: false, library: { version: 1, entries: [] } });
+  assert.throws(
+    () => currentFgaTaskSnapshot(selected, staleInterface),
+    /existing FGA battle configuration/,
+  );
 });

@@ -421,8 +421,12 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
   const isCompact = isInstanceRunning && !task.enabled && !task.runOnce && taskRunStatus === 'idle';
 
   // 判断是否可以编辑选项：实例未运行时始终可以编辑，运行中只有 pending 或 idle 状态的任务可以编辑
+  const isFgaTask = projectInterface?.name === 'FGAA' && task.taskName.startsWith('FGAA.');
+  const fgaSnapshotLocked =
+    isFgaTask && (taskRunStatus === 'pending' || taskRunStatus === 'running');
   const canEditOptions =
-    !isInstanceRunning || taskRunStatus === 'idle' || taskRunStatus === 'pending';
+    !fgaSnapshotLocked &&
+    (!isInstanceRunning || taskRunStatus === 'idle' || taskRunStatus === 'pending');
 
   // 判断是否可以调整顺序/删除（实例运行时禁用）
   const canReorder = !isInstanceRunning;
@@ -454,7 +458,7 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
     prevOptionValuesRef.current = currentOptionValues;
 
     // 只有 pending 状态的任务才需要调用 overridePipeline
-    if (taskRunStatus !== 'pending') {
+    if (taskRunStatus !== 'pending' || isFgaTask) {
       return;
     }
 
@@ -477,6 +481,7 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
     });
   }, [
     task.optionValues,
+    isFgaTask,
     taskRunStatus,
     instanceId,
     task.id,
@@ -1086,6 +1091,11 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
                 </Tooltip>
               )}
               {/* 选项列表 - 仅在有选项时显示 */}
+              {fgaSnapshotLocked && (
+                <p className="mb-3 text-xs text-text-muted">
+                  {t('queuedSnapshot', { ns: 'fgaa' })}
+                </p>
+              )}
               {hasOptions && (
                 <OptionListRenderer
                   instanceId={instanceId}

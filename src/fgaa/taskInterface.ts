@@ -185,6 +185,7 @@ export function fgaTaskOverride(
   selected: SelectedTask,
   pi: ProjectInterface,
   globals: GlobalSettings = globalDefaults,
+  library?: BattleLibrary,
 ): string {
   const mode = selected.taskName.slice('FGAA.'.length);
   const defaults = launcherDefaults[mode];
@@ -213,9 +214,12 @@ export function fgaTaskOverride(
     const node = choice?.pipeline_override?.FGAA_Battle as
       | { custom_action_param?: { battleConfig?: FgaConfig } }
       | undefined;
-    if (!launcher.battle_config || !node?.custom_action_param?.battleConfig)
+    const current = library
+      ? library.entries.find((entry) => entry.id === launcher.battle_config)?.data
+      : node?.custom_action_param?.battleConfig;
+    if (!launcher.battle_config || !current)
       throw new Error('Select an existing FGA battle configuration');
-    battleConfig = node.custom_action_param.battleConfig;
+    battleConfig = current;
     const configServer = battleConfig.battle_config_server;
     if (configServer && String(configServer).replace(' BFGO', '') !== server.replace(' BFGO', ''))
       throw new Error('Battle configuration server does not match task');
