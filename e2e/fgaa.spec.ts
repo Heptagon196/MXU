@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 test('feature tabs retain a saved FGA library and export unknown fields intact', async ({
   page,
@@ -101,4 +101,53 @@ test('invalid merged attacks leave the original configuration editable', async (
   await expect(page.locator('main pre')).toHaveText('n2an2');
   await page.getByRole('button', { name: '敌方 1', exact: true }).click();
   await expect(page.locator('main pre')).toHaveText('n2at1n2');
+});
+
+test('battle settings export original FGA types and retain inactive support values', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
+  await page.goto('/');
+  await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+  await page.getByRole('button', { name: '新建配置', exact: true }).click();
+  await page.getByRole('button', { name: '战斗设置', exact: true }).click();
+  await page.getByLabel('出战队伍', { exact: true }).selectOption('14');
+  await page.getByLabel('配置区服', { exact: true }).selectOption('Cn');
+  await page.getByLabel('启用 Raid 回合延时', { exact: true }).check();
+  await page.getByLabel('回合延时（秒）', { exact: true }).selectOption('7');
+  await page.getByLabel('自动选择敌方目标', { exact: true }).check();
+  await page.getByLabel('助战职阶', { exact: true }).selectOption('Caster');
+  await page.getByLabel('同时检查全部职阶', { exact: true }).check();
+  await page.getByLabel('从者匹配项', { exact: true }).fill('servant-a\nservant-b\nservant-a');
+  await page.getByRole('button', { name: '应用匹配项', exact: true }).first().click();
+  await page.getByLabel('礼装必须满破', { exact: true }).check();
+  await page.getByLabel('羁绊礼装效果', { exact: true }).selectOption('NP');
+  await page.getByLabel('助战选择方式', { exact: true }).selectOption('Manual');
+  await expect(page.getByLabel('礼装必须满破', { exact: true })).toBeDisabled();
+  await expect(page.getByLabel('礼装必须满破', { exact: true })).toBeChecked();
+  await page.getByRole('button', { name: '保存配置库', exact: true }).click();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出 .fga', exact: true }).click();
+  const download = await downloadPromise;
+  const exported = JSON.parse(await readFile((await download.path())!, 'utf8'));
+  expect(exported).toMatchObject({
+    autoskill_party: '14',
+    battle_config_server: 'Cn',
+    add_raid_delay: true,
+    raid_delay_seconds: '7',
+    auto_choose_target: true,
+    autoskill_support_class: 'Caster',
+    also_check_all: true,
+    support_pref_servant_list: ['servant-a', 'servant-b'],
+    support_pref_ce_mlb: true,
+    support_bond_ce_effect: 'NP',
+    support_mode: 'Manual',
+  });
+  await writeFile('test-results/fgaa-settings.fga', JSON.stringify(exported));
+  await page.reload();
+  await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+  await page.getByRole('button', { name: '战斗设置', exact: true }).click();
+  await expect(page.getByLabel('回合延时（秒）', { exact: true })).toHaveValue('7');
+  await page.getByLabel('助战选择方式', { exact: true }).selectOption('Preferred');
+  await expect(page.getByLabel('从者匹配项', { exact: true })).toHaveValue('servant-a\nservant-b');
 });

@@ -5,6 +5,7 @@ import { TextInput } from '@/components/FormControls';
 import { exportFga, importFga } from './battleLibrary';
 import { useBattleStore } from './battleStore';
 import { SkillEditor } from './SkillEditor';
+import { BattleSettings } from './BattleSettings';
 
 const button =
   'inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs hover:bg-bg-hover disabled:opacity-40 disabled:cursor-not-allowed';
@@ -14,6 +15,7 @@ export function BattleLibraryPage() {
   const state = useBattleStore();
   const fileInput = useRef<HTMLInputElement>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [section, setSection] = useState<'skills' | 'settings'>('skills');
   const selected = state.library.entries.find((entry) => entry.id === state.selectedId);
   const data = selected?.data;
   const party = String(data?.autoskill_party ?? '-1');
@@ -151,6 +153,22 @@ export function BattleLibraryPage() {
                   {t('export')}
                 </button>
               </div>
+              <div className="flex gap-2" role="group" aria-label={t('battle')}>
+                <button
+                  className={button}
+                  aria-pressed={section === 'skills'}
+                  onClick={() => setSection('skills')}
+                >
+                  {t('skill.title')}
+                </button>
+                <button
+                  className={button}
+                  aria-pressed={section === 'settings'}
+                  onClick={() => setSection('settings')}
+                >
+                  {t('settings.title')}
+                </button>
+              </div>
               <label className="block space-y-2 text-xs text-text-secondary">
                 {t('name')}
                 <TextInput
@@ -158,38 +176,44 @@ export function BattleLibraryPage() {
                   onChange={(value) => state.update({ autoskill_name: value })}
                 />
               </label>
-              <label className="block space-y-2 text-xs text-text-secondary">
-                {t('party')}
-                <select
-                  className="block w-full rounded-md border border-border bg-bg-secondary p-2 text-text-primary"
-                  value={party}
-                  onChange={(event) => state.update({ autoskill_party: event.target.value })}
-                >
-                  <option value="-1">{t('currentParty')}</option>
-                  {Array.from({ length: 15 }, (_, i) => (
-                    <option key={i} value={String(i)}>
-                      {t('partyNumber', { number: i + 1 })}
-                    </option>
-                  ))}
-                  {!Array.from({ length: 16 }, (_, i) => String(i - 1)).includes(party) && (
-                    <option value={party}>{t('unknownParty', { value: party })}</option>
-                  )}
-                </select>
-              </label>
-              <label className="block space-y-2 text-xs text-text-secondary">
-                {t('notes')}
-                <textarea
-                  className="block w-full rounded-md border border-border bg-bg-secondary p-3 text-text-primary"
-                  rows={4}
-                  value={field('autoskill_notes')}
-                  onChange={(event) => state.update({ autoskill_notes: event.target.value })}
+              <div hidden={section !== 'settings'} className="space-y-5">
+                <label className="block space-y-2 text-xs text-text-secondary">
+                  {t('party')}
+                  <select
+                    aria-label={t('party')}
+                    className="block w-full rounded-md border border-border bg-bg-secondary p-2 text-text-primary"
+                    value={party}
+                    onChange={(event) => state.update({ autoskill_party: event.target.value })}
+                  >
+                    <option value="-1">{t('currentParty')}</option>
+                    {Array.from({ length: 15 }, (_, i) => (
+                      <option key={i} value={String(i)}>
+                        {t('partyNumber', { number: i + 1 })}
+                      </option>
+                    ))}
+                    {!Array.from({ length: 16 }, (_, i) => String(i - 1)).includes(party) && (
+                      <option value={party}>{t('unknownParty', { value: party })}</option>
+                    )}
+                  </select>
+                </label>
+                <label className="block space-y-2 text-xs text-text-secondary">
+                  {t('notes')}
+                  <textarea
+                    className="block w-full rounded-md border border-border bg-bg-secondary p-3 text-text-primary"
+                    rows={4}
+                    value={field('autoskill_notes')}
+                    onChange={(event) => state.update({ autoskill_notes: event.target.value })}
+                  />
+                </label>
+                <BattleSettings key={selected!.id} data={data} onChanged={state.update} />
+              </div>
+              <div hidden={section !== 'skills'}>
+                <SkillEditor
+                  key={selected!.id}
+                  command={field('autoskill_cmd')}
+                  onChanged={(value) => state.update({ autoskill_cmd: value })}
                 />
-              </label>
-              <SkillEditor
-                key={selected!.id}
-                command={field('autoskill_cmd')}
-                onChanged={(value) => state.update({ autoskill_cmd: value })}
-              />
+              </div>
               <section className="rounded-lg border border-border bg-bg-secondary p-4">
                 <h2 className="text-sm font-medium">{t('command')}</h2>
                 <pre className="my-3 whitespace-pre-wrap break-all text-xs">
