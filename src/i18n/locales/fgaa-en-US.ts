@@ -1,0 +1,33 @@
+export default {
+  navigation: 'Feature navigation',
+  automation: 'Automation',
+  battle: 'Battle configs',
+  chaldea: 'Chaldea',
+  new: 'New config',
+  newName: 'New battle config',
+  import: 'Import .fga',
+  export: 'Export .fga',
+  copy: 'Duplicate',
+  save: 'Save library',
+  saved: 'Saved',
+  unsaved: 'Unsaved changes',
+  empty: 'Create a configuration or import an original FGA .fga file.',
+  name: 'Configuration name',
+  notes: 'Notes',
+  party: 'Party',
+  currentParty: 'Keep current party',
+  partyNumber: 'Party {{number}}',
+  unknownParty: 'Preserved value: {{value}}',
+  command: 'Skill command preview',
+  noCommand: 'No skill sequence yet',
+  editorPending:
+    'The FGA-style skill editor is being migrated. Existing commands and all other settings are preserved.',
+  localStorage: 'Stored in this client; export .fga files for backup.',
+  retry: 'Reload',
+  loadFailed:
+    'Could not read the library. Its original contents are preserved. Reload after repairing it.',
+  importFailed: 'Import failed: {{message}}',
+  chaldeaPending: 'Chaldea integration in progress',
+  chaldeaDetail:
+    'Data, catalogs, simulation and mirror settings will remain in this module. Migration is not complete yet.',
+};

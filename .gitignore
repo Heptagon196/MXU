@@ -26,3 +26,6 @@ dist-ssr
 # maafw
 interface.json
 mxu.json
+# FGAA browser validation outputs
+test-results/
+playwright-report/
