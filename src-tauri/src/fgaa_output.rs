@@ -1,6 +1,6 @@
 //! Track the last FGA run on one child's stdout, so EOF cannot affect a replacement child.
 #[derive(Default)]
-pub(crate) struct FgaaOutputRun(Option<serde_json::Value>);
+pub(crate) struct FgaaOutputRun(Option<serde_json::Value>, bool);
 
 impl FgaaOutputRun {
     pub(crate) fn observe(&mut self, line: &str) {
@@ -10,6 +10,18 @@ impl FgaaOutputRun {
         let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
             return;
         };
+        if value["protocol"] == 1
+            && value["event"] == "finished"
+            && self.0.as_ref().is_some_and(|run| {
+                run["runId"] == value["runId"] && run["nativeTaskId"] == value["nativeTaskId"]
+            })
+            && matches!(
+                value["payload"]["status"].as_str(),
+                Some("completed" | "failed" | "attention" | "stopped")
+            )
+        {
+            self.1 = true;
+        }
         if value["protocol"] != 1 || value["event"] != "started" || value["sequence"] != 1 {
             return;
         }
@@ -19,11 +31,20 @@ impl FgaaOutputRun {
             self.0 = Some(serde_json::json!({
                 "runId": value["runId"], "nativeTaskId": value["nativeTaskId"]
             }));
+            self.1 = false;
         }
     }
 
     pub(crate) fn closed_payload(&self) -> Option<String> {
         self.0.as_ref().map(ToString::to_string)
+    }
+
+    pub(crate) fn unfinished_task_id(&self) -> Option<i64> {
+        if self.1 {
+            None
+        } else {
+            self.0.as_ref()?.get("nativeTaskId")?.as_i64()
+        }
     }
 }
 
@@ -47,6 +68,20 @@ mod tests {
         let payload: serde_json::Value =
             serde_json::from_str(&tracker.closed_payload().unwrap()).unwrap();
         assert_eq!(payload["nativeTaskId"], 8);
+        assert_eq!(tracker.unfinished_task_id(), Some(8));
+        tracker.observe(
+            &serde_json::json!({"protocol":1,"event":"finished",
+            "runId":payload["runId"],"nativeTaskId":7,"payload":{"status":"completed"}})
+            .to_string(),
+        );
+        assert_eq!(tracker.unfinished_task_id(), Some(8));
+        tracker.observe(
+            &serde_json::json!({"protocol":1,"event":"finished",
+            "runId":payload["runId"],"nativeTaskId":8,"payload":{"status":"completed"}})
+            .to_string(),
+        );
+        assert_eq!(tracker.unfinished_task_id(), None);
+        assert!(tracker.closed_payload().is_some());
         assert!(FgaaOutputRun::default().closed_payload().is_none());
     }
 }

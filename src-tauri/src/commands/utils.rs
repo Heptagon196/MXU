@@ -63,21 +63,45 @@ pub fn handle_task_callback(
     details: &str,
 ) {
     let is_started = message == "Tasker.Task.Starting";
-    let is_succeeded = message == "Tasker.Task.Succeeded";
+    let mut is_succeeded = message == "Tasker.Task.Succeeded";
     let is_failed = message == "Tasker.Task.Failed";
 
     if !is_started && !is_succeeded && !is_failed {
         return;
     }
 
-    // 解析 task_id
-    let task_id: i64 = match serde_json::from_str::<serde_json::Value>(details)
-        .ok()
-        .and_then(|v| v.get("task_id").and_then(|id| id.as_i64()))
-    {
+    let parsed = serde_json::from_str::<serde_json::Value>(details).ok();
+    let task_id: i64 = match parsed.as_ref().and_then(|v| v["task_id"].as_i64()) {
         Some(id) => id,
         None => return,
     };
+
+    if !is_started
+        && parsed
+            .as_ref()
+            .and_then(|v| v["entry"].as_str())
+            .is_some_and(crate::fgaa_queue::is_fgaa_entry)
+    {
+        // Maa reports a stopped Pipeline as Succeeded. Require positive action
+        // evidence before considering a FGA task successful.
+        let completed = {
+            let instances = match maa_state.instances.lock() {
+                Ok(instances) => instances,
+                Err(_) => return,
+            };
+            instances
+                .get(instance_id)
+                .and_then(|instance| instance.tasker.as_ref())
+                .and_then(|tasker| tasker.get_task_detail(task_id).ok().flatten())
+                .is_some_and(|detail| crate::fgaa_queue::completed(&detail))
+        };
+        if is_failed || !completed {
+            is_succeeded = false;
+            if stop_fgaa_queue(maa_state, app, instance_id, task_id) {
+                return;
+            }
+        }
+    }
 
     let all_done = {
         let mut instances = match maa_state.instances.lock() {
@@ -89,6 +113,9 @@ pub fn handle_task_callback(
             None => return,
         };
         let state = &mut instance.task_run_state;
+        if state.fgaa_cancelled_ids.contains(&task_id) {
+            return;
+        }
 
         if is_started {
             // 任务开始：定位该任务在队列中的索引，更新当前索引和状态
@@ -150,6 +177,43 @@ pub fn handle_task_callback(
             );
         }
     }
+}
+
+/// Stop only a currently tracked FGA run. Late child EOF cannot stop its replacement.
+pub(crate) fn stop_fgaa_queue(
+    maa_state: &Arc<MaaState>,
+    app: &AppHandle,
+    instance_id: &str,
+    task_id: i64,
+) -> bool {
+    {
+        let Ok(mut instances) = maa_state.instances.lock() else {
+            return false;
+        };
+        let Some(instance) = instances.get_mut(instance_id) else {
+            return false;
+        };
+        if !crate::fgaa_queue::is_active(&instance.task_run_state, task_id) {
+            return false;
+        }
+        let Some(tasker) = instance.tasker.as_ref() else {
+            return false;
+        };
+        if let Err(error) = tasker.post_stop() {
+            log::error!("Could not stop interrupted FGA queue: {}", error);
+            return false;
+        }
+        crate::fgaa_queue::abort(&mut instance.task_run_state, task_id);
+        instance.task_ids.clear();
+    }
+    super::telemetry::on_task_finished(instance_id, task_id, false);
+    super::telemetry::on_run_finished(instance_id);
+    emit_state_changed(app, instance_id, "task-progress");
+    emit_state_changed(app, instance_id, "tasks-completed");
+    if let Err(error) = super::maa_agent::stop_agent_impl(maa_state, instance_id) {
+        log::warn!("Could not clean up interrupted FGA agent: {}", error);
+    }
+    true
 }
 
 /// 发送配置变更事件（双通道：WS 浏览器客户端 + Tauri WebView）

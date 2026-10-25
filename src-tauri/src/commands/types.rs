@@ -190,6 +190,9 @@ pub enum TaskStatus {
 /// 任务运行状态（后端管理，作为单一真相来源）
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TaskRunState {
+    /// FGA queue abort tombstones: ignore late native callbacks for cancelled tasks.
+    #[serde(skip)]
+    pub fgaa_cancelled_ids: Vec<i64>,
     /// selectedTaskId → status ("idle"/"pending"/"running"/"succeeded"/"failed")
     pub statuses: HashMap<String, String>,
     /// maaTaskId → selectedTaskId

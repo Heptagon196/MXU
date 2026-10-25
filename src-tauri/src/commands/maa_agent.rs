@@ -268,6 +268,11 @@ pub(crate) fn spawn_child_output_reader<R: Read + Send + 'static>(
                 "fgaa-output-closed",
                 &payload,
             );
+            if let Some(task_id) = fgaa_run.unfinished_task_id() {
+                if let Some(state) = batcher.app.try_state::<Arc<MaaState>>() {
+                    super::utils::stop_fgaa_queue(&state, &batcher.app, &batcher.instance_id, task_id);
+                }
+            }
         }
     })
 }
@@ -786,6 +791,7 @@ pub async fn start_tasks_impl(
             state.statuses.clear();
             state.mappings.clear();
             state.pending_task_ids.clear();
+            state.fgaa_cancelled_ids.clear();
             state.current_task_index = 0;
         }
         for (idx, task) in tasks.iter().enumerate() {
