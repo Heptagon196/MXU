@@ -1,3 +1,4 @@
+import { CheckboxInput, formInputClass } from '@/components/FormControls';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import catalog from '@/i18n/locales/fgaa-materials.json';
@@ -43,15 +44,14 @@ export function MaterialPicker({
         type="search"
         aria-label={t('materials.search')}
         placeholder={t('materials.search')}
-        className="w-full rounded border border-border bg-bg-secondary p-2 text-sm"
+        className={`${formInputClass} w-full`}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
       <div className="grid max-h-56 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
         {visible.map(([id]) => (
           <label key={id} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+            <CheckboxInput
               checked={selected.includes(id)}
               onChange={(event) =>
                 event.target.checked ? onChanged([...selected, id]) : remove(id)

@@ -2,9 +2,9 @@
  * 通用表单控件组件
  * 可在 ActionItem、OptionEditor 等处复用
  */
-import { useState } from 'react';
+import { useState, type InputHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Check } from 'lucide-react';
 import clsx from 'clsx';
 import { open } from '@tauri-apps/plugin-dialog';
 import { isTauri } from '@tauri-apps/api/core';
@@ -22,26 +22,91 @@ interface SwitchButtonProps {
   onChange: (value: boolean) => void;
   disabled?: boolean;
   tabIndex?: number;
+  'aria-label'?: string;
 }
 
-export function SwitchButton({ value, onChange, disabled, tabIndex }: SwitchButtonProps) {
+const switchTrack = (value: boolean) =>
+  clsx(
+    'relative w-11 h-6 rounded-full transition-colors flex-shrink-0',
+    value ? 'bg-accent' : 'bg-bg-active',
+  );
+const switchThumb = (value: boolean) =>
+  clsx(
+    'absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+    value ? 'translate-x-5' : 'translate-x-0',
+  );
+export const formInputClass =
+  'px-3 py-1.5 text-sm rounded-md border border-border bg-bg-secondary text-text-primary focus:outline-none focus:ring-1 focus:border-accent focus:ring-accent/20 disabled:opacity-60 disabled:cursor-not-allowed';
+export const formButtonClass =
+  'inline-flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60 disabled:cursor-not-allowed';
+
+/** Native form semantics, with the same track/thumb as MXU's SwitchButton. */
+export function SwitchInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  const [value, setValue] = useState(Boolean(props.defaultChecked));
+  const checked = props.checked ?? value;
+  return (
+    <span className="relative inline-flex shrink-0 align-middle">
+      <input
+        {...props}
+        type="checkbox"
+        role="switch"
+        className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        onChange={(event) => {
+          setValue(event.target.checked);
+          props.onChange?.(event);
+        }}
+      />
+      <span
+        aria-hidden="true"
+        className={clsx(
+          switchTrack(checked),
+          'peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-bg-primary peer-disabled:opacity-60',
+        )}
+      >
+        <span className={switchThumb(checked)} />
+      </span>
+    </span>
+  );
+}
+
+/** Checkbox selection uses the same shape and icon as the MXU task checkbox. */
+export function CheckboxInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  return (
+    <span className="relative inline-flex h-4 w-4 shrink-0 align-middle">
+      <input
+        {...props}
+        type="checkbox"
+        className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+      />
+      <span
+        aria-hidden="true"
+        className="flex h-4 w-4 items-center justify-center rounded border border-border-strong bg-bg-primary text-transparent transition-colors peer-checked:border-accent peer-checked:bg-accent peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-disabled:opacity-60"
+      >
+        <Check className="h-3 w-3" strokeWidth={3} />
+      </span>
+    </span>
+  );
+}
+
+export function SwitchButton({
+  value,
+  onChange,
+  disabled,
+  tabIndex,
+  'aria-label': ariaLabel,
+}: SwitchButtonProps) {
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={value}
+      aria-label={ariaLabel}
       onClick={() => !disabled && onChange(!value)}
       disabled={disabled}
       tabIndex={tabIndex}
-      className={clsx(
-        'relative w-11 h-6 rounded-full transition-colors flex-shrink-0',
-        value ? 'bg-accent' : 'bg-bg-active',
-        disabled && 'cursor-not-allowed opacity-60',
-      )}
+      className={clsx(switchTrack(value), disabled && 'cursor-not-allowed opacity-60')}
     >
-      <span
-        className={clsx(
-          'absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-          value ? 'translate-x-5' : 'translate-x-0',
-        )}
-      />
+      <span className={clsx(switchThumb(value))} />
     </button>
   );
 }
@@ -58,7 +123,7 @@ export function SwitchField({ label, hint, value, onChange, disabled }: SwitchFi
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <label className="text-xs text-text-secondary">{label}</label>
-        <SwitchButton value={value} onChange={onChange} disabled={disabled} />
+        <SwitchButton value={value} onChange={onChange} disabled={disabled} aria-label={label} />
       </div>
       {hint && <p className="text-[10px] text-text-muted">{hint}</p>}
     </div>

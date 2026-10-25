@@ -1,3 +1,4 @@
+import { formButtonClass, formInputClass } from '@/components/FormControls';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Copy, Download, Plus, Save, Upload } from 'lucide-react';
@@ -7,8 +8,7 @@ import { useBattleStore } from './battleStore';
 import { SkillEditor } from './SkillEditor';
 import { BattleSettings } from './BattleSettings';
 
-const button =
-  'inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs hover:bg-bg-hover disabled:opacity-40 disabled:cursor-not-allowed';
+const button = formButtonClass;
 
 export function BattleLibraryPage() {
   const { t } = useTranslation('fgaa');
@@ -181,7 +181,7 @@ export function BattleLibraryPage() {
                   {t('party')}
                   <select
                     aria-label={t('party')}
-                    className="block w-full rounded-md border border-border bg-bg-secondary p-2 text-text-primary"
+                    className={`${formInputClass} block w-full`}
                     value={party}
                     onChange={(event) => state.update({ autoskill_party: event.target.value })}
                   >
@@ -199,7 +199,7 @@ export function BattleLibraryPage() {
                 <label className="block space-y-2 text-xs text-text-secondary">
                   {t('notes')}
                   <textarea
-                    className="block w-full rounded-md border border-border bg-bg-secondary p-3 text-text-primary"
+                    className={`${formInputClass} block w-full`}
                     rows={4}
                     value={field('autoskill_notes')}
                     onChange={(event) => state.update({ autoskill_notes: event.target.value })}

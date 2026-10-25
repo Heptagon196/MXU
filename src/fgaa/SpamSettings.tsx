@@ -1,3 +1,6 @@
+import { formButtonClass } from '@/components/FormControls';
+import { formInputClass } from '@/components/FormControls';
+import { CheckboxInput } from '@/components/FormControls';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,9 +12,8 @@ import {
   type SpamSlot,
 } from './spamPolicy';
 
-const control = 'rounded border border-border bg-bg-secondary p-2 text-sm';
-const button =
-  'rounded border border-border px-3 py-2 text-xs hover:bg-bg-hover disabled:opacity-40';
+const control = formInputClass;
+const button = formButtonClass;
 
 function ActionSettings({
   title,
@@ -67,8 +69,7 @@ function ActionSettings({
         <div className="flex flex-wrap gap-3">
           {waves.map((wave) => (
             <label key={wave} className="flex items-center gap-1 text-sm">
-              <input
-                type="checkbox"
+              <CheckboxInput
                 checked={value.waves.includes(wave)}
                 onChange={(event) =>
                   onChanged({

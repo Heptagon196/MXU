@@ -54,6 +54,20 @@ test('built Chaldea module starts inside the product tab', async ({ page }) => {
   await expect(frame.locator('flt-semantics')).not.toHaveCount(0, { timeout: 30000 });
   console.log('Chaldea semantics:', await frame.locator('body').innerText());
   await page.screenshot({ path: 'test-results/chaldea-module.png', fullPage: true });
+  await page.getByRole('tab', { name: '全局设置', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: '设置分类' })
+    .getByRole('button', { name: '主框架', exact: true })
+    .click();
+  await page.getByRole('button', { name: '深色', exact: true }).click();
+  await page.getByRole('tab', { name: 'Chaldea', exact: true }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await frame
+    .locator('body')
+    .evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+  await page.screenshot({ path: 'test-results/chaldea-module-dark.png', fullPage: true });
   expect(errors).toEqual([]);
 });
 

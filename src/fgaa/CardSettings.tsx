@@ -1,3 +1,6 @@
+import { formButtonClass } from '@/components/FormControls';
+import { formInputClass } from '@/components/FormControls';
+import { CheckboxInput } from '@/components/FormControls';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FgaConfig } from './battleLibrary';
@@ -9,9 +12,8 @@ import {
   movePriority,
 } from './cardPolicy';
 
-const button =
-  'rounded border border-border px-2 py-1 text-xs hover:bg-bg-hover disabled:opacity-40';
-const control = 'rounded border border-border bg-bg-secondary p-2 text-sm';
+const button = formButtonClass;
+const control = formInputClass;
 
 function Priority({
   source,
@@ -184,8 +186,7 @@ export function CardSettings({
           />
         </fieldset>
         <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+          <CheckboxInput
             checked={data.use_servant_priority === true}
             onChange={(event) => onChanged({ use_servant_priority: event.target.checked })}
           />

@@ -1,3 +1,6 @@
+import { formInputClass } from '@/components/FormControls';
+import { formButtonClass } from '@/components/FormControls';
+import { CheckboxInput } from '@/components/FormControls';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ModalPortal, useModalFocusTrap } from '@/components/ui/Modal';
@@ -11,8 +14,7 @@ import {
   type Action,
 } from './skillPlan';
 
-const button =
-  'rounded-md border border-border px-3 py-2 text-xs hover:bg-bg-hover disabled:opacity-40';
+const button = formButtonClass;
 type SkillChoice = { type: 'servantSkill' | 'masterSkill' | 'commandSpell'; skill: string };
 
 function TargetDialog({
@@ -50,8 +52,7 @@ function TargetDialog({
           </h2>
           {choice.type === 'servantSkill' && (
             <label className="mb-3 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <CheckboxInput
                 checked={multiple}
                 onChange={(e) => {
                   setMultiple(e.target.checked);
@@ -299,7 +300,7 @@ export function SkillEditor({
         <label className="text-xs">
           {t('skill.front')}{' '}
           <select
-            className="rounded border border-border bg-bg-primary p-2"
+            className={formInputClass}
             value={starting}
             onChange={(e) => setStarting(e.target.value)}
           >
@@ -313,7 +314,7 @@ export function SkillEditor({
         <label className="text-xs">
           {t('skill.reserve')}{' '}
           <select
-            className="rounded border border-border bg-bg-primary p-2"
+            className={formInputClass}
             value={reserve}
             onChange={(e) => setReserve(e.target.value)}
           >
@@ -349,7 +350,7 @@ export function SkillEditor({
         <label className="block text-xs">
           {t('skill.beforeNp')}{' '}
           <select
-            className="rounded border border-border bg-bg-primary p-2"
+            className={formInputClass}
             value={cards}
             onChange={(e) => setCards(Number(e.target.value))}
           >

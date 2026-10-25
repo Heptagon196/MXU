@@ -1,3 +1,5 @@
+import { formInputClass } from '@/components/FormControls';
+import { CheckboxInput } from '@/components/FormControls';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FgaConfig } from './battleLibrary';
@@ -5,8 +7,7 @@ import { MaterialPicker } from './MaterialPicker';
 import { CardSettings } from './CardSettings';
 import { SpamSettings } from './SpamSettings';
 
-const control =
-  'w-full rounded-md border border-border bg-bg-secondary p-2 text-sm text-text-primary';
+const control = `${formInputClass} w-full`;
 const supportFlags = [
   'support_friends_only',
   'support_pref_ce_mlb',
@@ -95,8 +96,7 @@ export function BattleSettings({
   };
   const toggle = (field: string, disabled = false) => (
     <label key={field} className="flex items-center gap-2 text-sm">
-      <input
-        type="checkbox"
+      <CheckboxInput
         checked={data[field] === true}
         disabled={disabled}
         onChange={(event) => onChanged({ [field]: event.target.checked })}

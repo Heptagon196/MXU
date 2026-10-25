@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SwitchInput } from '@/components/FormControls';
 import { chaldeaGroups, requestChaldeaSettings, type ChaldeaSettings } from './chaldeaSettings';
 
 export function ChaldeaSettingsPage({ active }: { active: boolean }) {
@@ -61,7 +62,7 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
             <fieldset
               key={group}
               disabled={status === 'saving' || status === 'loading'}
-              className="rounded-lg border border-border p-4"
+              className="rounded-xl border border-border bg-bg-secondary p-4"
             >
               <legend className="px-2 font-medium">{t(`chaldeaSettings.${group}`)}</legend>
               <p className="mb-4 text-sm text-text-secondary">
@@ -69,10 +70,12 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {keys.map((key) => (
-                  <label key={key} className="flex items-center justify-between gap-3 text-sm">
+                  <label
+                    key={key}
+                    className="flex items-center justify-between gap-4 py-2 text-sm text-text-primary"
+                  >
                     {t(`chaldeaSettings.fields.${key}`)}
-                    <input
-                      type="checkbox"
+                    <SwitchInput
                       checked={values[key]}
                       onChange={(event) => {
                         setValues({ ...values, [key]: event.target.checked });
@@ -86,7 +89,7 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
           ))}
           <button
             disabled={status === 'saving' || status === 'loading'}
-            className="rounded bg-accent px-4 py-2 text-white disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-60 disabled:cursor-not-allowed"
             type="submit"
           >
             {t('chaldeaSettings.save')}

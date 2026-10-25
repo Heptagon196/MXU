@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
+import { SwitchInput, formInputClass } from '@/components/FormControls';
 import { bounds, globalKeys, globalGroups, validateGlobals } from './globalSettings';
 export function GlobalSettingsPage() {
   const { t } = useTranslation('fgaa');
@@ -52,20 +53,20 @@ export function GlobalSettingsPage() {
           className="space-y-4"
         >
           {Object.entries(globalGroups).map(([group, keys]) => (
-            <fieldset key={group} className="rounded-lg border border-border p-4">
+            <fieldset key={group} className="rounded-xl border border-border bg-bg-secondary p-4">
               <legend className="px-2 font-medium">{t(`globals.groups.${group}`)}</legend>
               <div className="grid gap-4 sm:grid-cols-2">
                 {keys.map((key) => (
                   <label
                     key={key}
-                    className="flex items-center justify-between gap-4 rounded border border-border p-3 text-sm"
+                    className="flex items-center justify-between gap-4 py-2 text-sm text-text-primary"
                   >
                     <span>{t(`globals.fields.${key}`)}</span>
                     {typeof values[key] === 'boolean' ? (
-                      <input type="checkbox" name={key} defaultChecked={values[key] as boolean} />
+                      <SwitchInput name={key} defaultChecked={values[key] as boolean} />
                     ) : (
                       <input
-                        className="w-24 rounded border border-border bg-bg-secondary p-2"
+                        className={`${formInputClass} w-24`}
                         name={key}
                         type="number"
                         required
@@ -80,7 +81,10 @@ export function GlobalSettingsPage() {
               </div>
             </fieldset>
           ))}
-          <button className="rounded bg-accent px-4 py-2 text-white" type="submit">
+          <button
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            type="submit"
+          >
             {t('globals.save')}
           </button>
           <p role="status">

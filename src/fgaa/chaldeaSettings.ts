@@ -23,8 +23,51 @@ export function validateChaldeaSettings(value: unknown): ChaldeaSettings {
   return data as ChaldeaSettings;
 }
 let moduleWindow: Window | null = null;
+let stopAppearanceSync: (() => void) | undefined;
 export function bindChaldeaWindow(value: Window | null) {
+  stopAppearanceSync?.();
   moduleWindow = value;
+  if (!value) return;
+  const sync = () => {
+    const root = document.documentElement;
+    const style = getComputedStyle(root);
+    value.postMessage(
+      JSON.stringify({
+        type: 'fgaa.chaldea.appearance',
+        version: 1,
+        dark: root.classList.contains('dark'),
+        accent: style.getPropertyValue('--color-accent').trim(),
+        background: style.getPropertyValue('--color-bg-primary').trim(),
+        surface: style.getPropertyValue('--color-bg-secondary').trim(),
+      }),
+      window.location.origin,
+    );
+  };
+  const ready = (event: MessageEvent) => {
+    if (
+      event.source !== value ||
+      event.origin !== window.location.origin ||
+      typeof event.data !== 'string'
+    )
+      return;
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'fgaa.chaldea.ready' && data.version === 1) sync();
+    } catch {
+      /* Ignore unrelated module output. */
+    }
+  };
+  const observer = new MutationObserver(sync);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  });
+  window.addEventListener('message', ready);
+  stopAppearanceSync = () => {
+    observer.disconnect();
+    window.removeEventListener('message', ready);
+  };
+  sync();
 }
 
 export function requestChaldeaSettings(values?: ChaldeaSettings): Promise<ChaldeaSettings> {
