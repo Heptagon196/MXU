@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { FgaConfig } from './battleLibrary';
 import { MaterialPicker } from './MaterialPicker';
 import { CardSettings } from './CardSettings';
+import { SpamSettings } from './SpamSettings';
 
 const control =
   'w-full rounded-md border border-border bg-bg-secondary p-2 text-sm text-text-primary';
@@ -108,6 +109,10 @@ export function BattleSettings({
   return (
     <div className="space-y-4">
       <CardSettings data={data} onChanged={onChanged} />
+      <SpamSettings
+        source={data.spam_x as string | undefined}
+        onChanged={(value) => onChanged({ spam_x: value })}
+      />
       <details open className="rounded-lg border border-border p-4">
         <summary className="cursor-pointer text-sm font-semibold">{t('settings.battle')}</summary>
         <div className="mt-4 space-y-4">

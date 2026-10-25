@@ -1,4 +1,26 @@
 export default {
+  spam: {
+    title: '技能与宝具连发',
+    hint: '按队伍位置配置，换人后跟随该从者。关闭连发会保留目标和波次；未勾选任何波次时不会触发。',
+    skill: '技能 {{number}}',
+    np: '宝具',
+    mode: '触发条件',
+    target: '技能目标',
+    waveNumber: '额外波次编号',
+    addWave: '添加波次',
+    unsupported: '连发配置包含无法编辑的数据，原内容已保留。',
+    reset: '重置连发配置',
+    modes: { None: '关闭', Spam: '可用时使用', Danger: '危险敌人时使用' },
+    targets: {
+      None: '不选择目标',
+      Self: '自身',
+      Slot1: '场上位置 1',
+      Slot2: '场上位置 2',
+      Slot3: '场上位置 3',
+      Left: '左侧选项',
+      Right: '右侧选项',
+    },
+  },
   cards: {
     addWave: '新增波次',
     removeWave: '删除波次',

@@ -130,6 +130,22 @@ test('battle settings export original FGA types and retain inactive support valu
     .selectOption('T');
   await page.getByLabel('洗牌条件', { exact: true }).selectOption('NoNPMatching');
   await page.getByLabel('洗牌波次', { exact: true }).selectOption('2');
+  await page.getByText('技能与宝具连发', { exact: true }).click();
+  const skillSpam = page.getByRole('group', { name: '技能 1', exact: true });
+  await skillSpam.getByRole('combobox', { name: '触发条件', exact: true }).selectOption('Danger');
+  await skillSpam.getByRole('combobox', { name: '技能目标', exact: true }).selectOption('Self');
+  await skillSpam.getByRole('checkbox', { name: '波次 1', exact: true }).uncheck();
+  await skillSpam.getByRole('button', { name: '添加波次', exact: true }).click();
+  await skillSpam.getByRole('combobox', { name: '触发条件', exact: true }).selectOption('None');
+  await expect(skillSpam.getByRole('combobox', { name: '技能目标', exact: true })).toHaveValue(
+    'Self',
+  );
+  await expect(skillSpam.getByRole('combobox', { name: '技能目标', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: '队伍位置 6', exact: true }).click();
+  await page
+    .getByRole('group', { name: '宝具', exact: true })
+    .getByRole('combobox', { name: '触发条件', exact: true })
+    .selectOption('Spam');
   await page.getByLabel('配置区服', { exact: true }).selectOption('Cn');
   await page.getByRole('searchbox', { name: '搜索素材' }).fill('Bone');
   await page.getByRole('checkbox', { name: '凶骨', exact: true }).check();
@@ -175,6 +191,11 @@ test('battle settings export original FGA types and retain inactive support valu
     support_mode: 'Manual',
   });
   await writeFile('test-results/fgaa-settings.fga', JSON.stringify(exported));
+  expect(typeof exported.spam_x).toBe('string');
+  const spam = JSON.parse(exported.spam_x);
+  expect(spam[0].skills[0]).toEqual({ spam: 'None', target: 'Self', waves: [2, 3, 4] });
+  expect(spam[5].np.spam).toBe('Spam');
+  expect(spam[1].np.spam).toBe('None');
   await page.reload();
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await page.getByRole('button', { name: '战斗设置', exact: true }).click();

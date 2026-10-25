@@ -1,4 +1,26 @@
 export default {
+  spam: {
+    title: 'Skill and NP spam',
+    hint: 'Configure by party position; follows the servant after order changes. Turning spam off retains targets and waves. With no waves selected, it never triggers.',
+    skill: 'Skill {{number}}',
+    np: 'NP',
+    mode: 'Trigger',
+    target: 'Skill target',
+    waveNumber: 'Additional wave number',
+    addWave: 'Add wave',
+    unsupported: 'Spam configuration contains unsupported data. The original content is retained.',
+    reset: 'Reset spam configuration',
+    modes: { None: 'Off', Spam: 'Use when available', Danger: 'Use against dangerous enemies' },
+    targets: {
+      None: 'No target',
+      Self: 'Self',
+      Slot1: 'On-field slot 1',
+      Slot2: 'On-field slot 2',
+      Slot3: 'On-field slot 3',
+      Left: 'Left option',
+      Right: 'Right option',
+    },
+  },
   cards: {
     addWave: 'Add wave',
     removeWave: 'Remove wave',
