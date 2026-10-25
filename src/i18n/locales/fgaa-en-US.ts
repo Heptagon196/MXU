@@ -1,9 +1,13 @@
 export default {
   globalSettingsTab: 'Global settings',
   globals: {
+    sections: 'Settings categories',
+    framework: 'Framework',
+    fga: 'FGA',
+    loading: 'Loading settings…',
     title: 'FGA global settings',
     detail:
-      'Saved values apply to subsequent runs. Active runs retain their snapshot. Framework and Chaldea settings integration is pending.',
+      'Saved values apply to subsequent runs. Active runs retain their snapshot. Chaldea settings will be available after module integration.',
     blocked: 'Settings cannot be loaded. Saving and running are blocked.',
     retry: 'Reload',
     save: 'Save global settings',

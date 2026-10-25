@@ -1,9 +1,13 @@
 export default {
   globalSettingsTab: '全局设置',
   globals: {
+    sections: '设置分类',
+    framework: '主框架',
+    fga: 'FGA',
+    loading: '正在加载设置…',
     title: 'FGA 全局设置',
     detail:
-      '保存后用于后续启动的任务；正在运行的任务保留启动时的参数。框架和 Chaldea 设置仍在接入。',
+      '保存后用于后续启动的任务；正在运行的任务保留启动时的参数。Chaldea 设置将在模块接入后提供。',
     blocked: '设置无法读取，已阻止覆盖和运行。',
     retry: '重新读取',
     save: '保存全局设置',

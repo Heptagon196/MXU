@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen, ListChecks, Swords, Settings } from 'lucide-react';
 import './i18n';
 import { BattleLibraryPage } from './BattleLibraryPage';
-import { GlobalSettingsPage } from './GlobalSettingsPage';
+import { ProductSettingsPage, type SettingsSection } from './ProductSettingsPage';
 import { useBattleStore } from './battleStore';
 import { useAppStore } from '@/stores/appStore';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
@@ -21,6 +21,14 @@ type Page = (typeof pages)[number]['id'];
 export function ProductShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation('fgaa');
   const [page, setPage] = useState<Page>('automation');
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>('fga');
+  const currentPage = useAppStore((state) => state.currentPage);
+  useEffect(() => {
+    if (currentPage !== 'settings') return;
+    setSettingsSection('framework');
+    setPage('settings');
+    useAppStore.getState().setCurrentPage('main');
+  }, [currentPage]);
   const dirty = useBattleStore((state) => state.dirty);
   const library = useBattleStore((state) => state.library);
   const hideSQ = useFgaaSettingsStore((state) => state.values.hide_sq_in_ap_resources);
@@ -101,7 +109,11 @@ export function ProductShell({ children }: { children: ReactNode }) {
         hidden={page !== 'settings'}
         className="flex-1 min-h-0 overflow-y-auto"
       >
-        <GlobalSettingsPage />
+        <ProductSettingsPage
+          section={settingsSection}
+          onSection={setSettingsSection}
+          onClose={() => setPage('automation')}
+        />
       </div>
       {/* Keep the original app mounted: running tasks and instance state survive page changes. */}
       <div

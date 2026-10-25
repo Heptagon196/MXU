@@ -138,7 +138,7 @@ const LazyVersionWarningModal = lazy(async () => {
   return { default: module.VersionWarningModal };
 });
 
-function App() {
+function App({ settingsInProductShell = false }: { settingsInProductShell?: boolean }) {
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [versionWarning, setVersionWarning] = useState<{ current: string; minimum: string } | null>(
@@ -1804,7 +1804,7 @@ function App() {
   );
 
   // 设置页面
-  if (currentPage === 'settings') {
+  if (currentPage === 'settings' && !settingsInProductShell) {
     return (
       <div
         className={`h-full flex flex-col bg-bg-primary relative ${backgroundImageDataUrl ? 'has-background-image' : ''}`}

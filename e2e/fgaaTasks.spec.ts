@@ -43,8 +43,18 @@ test('FGA project loads through MXU and exposes per-task launch options', async 
   await page.getByRole('spinbutton').nth(1).blur();
   await page.getByRole('button', { name: '刷本 1', exact: true }).press('Enter');
   await expect(page.getByRole('spinbutton').nth(1)).toHaveValue('12');
-  await expect(
-    page.getByRole('switch', { name: /^限制刷本次数/ }).nth(1),
-  ).not.toBeChecked();
+  await expect(page.getByRole('switch', { name: /^限制刷本次数/ }).nth(1)).not.toBeChecked();
   await page.screenshot({ path: 'test-results/fgaa-tasks.png', fullPage: true });
+  await page.getByRole('button', { name: '设置', exact: true }).click();
+  await expect(page.getByRole('tab', { name: '全局设置', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: '主框架', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('heading', { name: '设置', exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: '自动化', exact: true }).click();
+  await expect(page.getByRole('spinbutton').nth(1)).toHaveValue('12');
 });
