@@ -112,6 +112,24 @@ test('battle settings export original FGA types and retain inactive support valu
   await page.getByRole('button', { name: '新建配置', exact: true }).click();
   await page.getByRole('button', { name: '战斗设置', exact: true }).click();
   await page.getByLabel('出战队伍', { exact: true }).selectOption('14');
+  await page.getByText('指令卡与洗牌', { exact: true }).click();
+  const cards = page.getByRole('group', { name: '指令卡优先级', exact: true });
+  await cards.getByRole('button', { name: '上移 克制 Arts', exact: true }).click();
+  await cards.getByRole('button', { name: '新增波次', exact: true }).click();
+  await cards.getByRole('button', { name: '上移 克制 Quick', exact: true }).click();
+  await page.getByLabel('启用从者选卡优先级', { exact: true }).check();
+  const servants = page.getByRole('group', { name: '从者优先级', exact: true });
+  await servants.getByRole('button', { name: '上移 队伍位置 2', exact: true }).click();
+  const brave = page.getByRole('group', { name: 'Brave Chain', exact: true });
+  await brave.getByRole('combobox', { name: '波次 1', exact: true }).selectOption('WithNP');
+  await brave.getByRole('button', { name: '新增波次', exact: true }).click();
+  await brave.getByRole('combobox', { name: '波次 2', exact: true }).selectOption('Avoid');
+  await page
+    .getByRole('group', { name: '指令卡重排', exact: true })
+    .getByRole('combobox')
+    .selectOption('T');
+  await page.getByLabel('洗牌条件', { exact: true }).selectOption('NoNPMatching');
+  await page.getByLabel('洗牌波次', { exact: true }).selectOption('2');
   await page.getByLabel('配置区服', { exact: true }).selectOption('Cn');
   await page.getByRole('searchbox', { name: '搜索素材' }).fill('Bone');
   await page.getByRole('checkbox', { name: '凶骨', exact: true }).check();
@@ -138,6 +156,13 @@ test('battle settings export original FGA types and retain inactive support valu
   expect(exported).toMatchObject({
     autoskill_party: '14',
     battle_config_mat: ['Bone'],
+    card_priority: 'WA,WB,WQ,B,A,Q,RB,RA,RQ\nWA,WQ,WB,B,A,Q,RB,RA,RQ',
+    servant_priority: '2,1,3,4,5,6',
+    use_servant_priority: true,
+    auto_skill_brave_chains: 'WithNP,Avoid',
+    auto_skill_rearrange_cards: 'T',
+    shuffle_cards: 'NoNPMatching',
+    shuffle_cards_wave: 2,
     battle_config_server: 'Cn',
     add_raid_delay: true,
     raid_delay_seconds: '7',

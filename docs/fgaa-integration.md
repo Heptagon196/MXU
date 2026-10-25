@@ -21,3 +21,9 @@ The branch does not yet implement FGA execution through Tauri or Android. The FG
 The settings browser test exports `test-results/fgaa-settings.fga`. From the host root, run `node tools/verify-mxu-preferences.mjs` with `JAVA_HOME` configured to validate this actual UI export, including the selected material enum, through the FGA `IBattleConfig` adapter. Six browser tests now pass, including unknown material preservation.
 
 Upstream updates should be merged into this integration branch and tested before updating the host's pinned commit. Keep application-specific changes within `src/fgaa` and the few documented entry points wherever possible.
+
+## Card policies
+
+`CardSettings.tsx` edits wave-specific card and servant ordering, Brave Chain, rearrangement and shuffle settings. Reorder controls preserve other waves; added waves copy the final order. The original FGA format is retained: priorities use newline-separated waves, servant tokens contain no spaces, boolean/Brave Chain wave lists use commas, and shuffle wave is an integer. Unsupported priority values remain unchanged until an explicit reset (which can be undone).
+
+Current validation: 18 unit tests, 6 browser tests and the host's actual-export JVM verifier pass. The preference browser case changes two card waves, servant ordering, Brave Chain, rearrangement and shuffle before exporting. Spam settings, native execution and the remaining migration work are not yet implemented here.
