@@ -68,6 +68,23 @@ test('built Chaldea module starts inside the product tab', async ({ page }) => {
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
     );
   await page.screenshot({ path: 'test-results/chaldea-module-dark.png', fullPage: true });
+  await frame.getByRole('button', { name: '下一页', exact: true }).click();
+  // Flutter PageView's 300ms transition must finish before another nextPage call.
+  await page.waitForTimeout(350);
+  await expect(frame.getByRole('group', { name: '选择语言', exact: true })).toBeVisible();
+  await frame.getByRole('button', { name: '下一页', exact: true }).click();
+  // Flutter PageView's 300ms transition must finish before another nextPage call.
+  await page.waitForTimeout(350);
+  await expect(frame.getByRole('textbox')).toBeVisible();
+  await frame.getByRole('button', { name: '下一页', exact: true }).click();
+  // Flutter PageView's 300ms transition must finish before another nextPage call.
+  await page.waitForTimeout(350);
+  await expect(frame.getByRole('group', { name: '数据库', exact: true })).toBeVisible();
+  await page.screenshot({ path: 'test-results/chaldea-database-onboarding.png', fullPage: true });
+  await frame.getByRole('button', { name: '完成', exact: true }).click();
+  await expect(
+    frame.locator('flt-semantics').getByText('数据库未下载，请重试。', { exact: true }),
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 
