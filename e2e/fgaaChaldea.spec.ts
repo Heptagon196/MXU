@@ -49,6 +49,9 @@ test('built Chaldea module starts inside the product tab', async ({ page }) => {
   await page.getByRole('tab', { name: 'Chaldea', exact: true }).click();
   const frame = page.frameLocator('iframe[title="Chaldea"]');
   await expect(frame.locator('flt-glass-pane')).toBeAttached({ timeout: 60000 });
+  await expect
+    .poll(() => frame.locator('body').evaluate(() => location.pathname))
+    .toBe('/chaldea/');
   const semantics = frame.locator('flt-semantics-placeholder');
   if (await semantics.count()) await semantics.press('Enter');
   await expect(frame.locator('flt-semantics')).not.toHaveCount(0, { timeout: 30000 });
