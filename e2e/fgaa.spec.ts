@@ -99,6 +99,16 @@ test('full-screen editor preserves targets, attacks, history and saved commands'
   await editor.getByRole('button', { name: '1. a(11)', exact: true }).click();
   await editor.getByRole('button', { name: '敌方 2', exact: true }).click();
   await expect(command).toHaveText('a(11)t264n1,#,');
+  await expect(editor.getByRole('button', { name: '敌方 2', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await editor.getByRole('button', { name: '波次 2', exact: true }).click();
+  await expect(editor.getByRole('button', { name: '敌方 2', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await editor.getByRole('button', { name: '波次 1', exact: true }).click();
   await page.screenshot({ path: 'test-results/fgaa-fullscreen-main.png' });
   await editor.getByRole('button', { name: '完成编辑', exact: true }).click();
   await expect(editor).toHaveCount(0);

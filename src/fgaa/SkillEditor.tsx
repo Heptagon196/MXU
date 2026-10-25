@@ -87,10 +87,8 @@ export function SkillEditor({
   const turn = Math.min(turnIndex, plan[wave].length - 1);
   const actions = plan[wave][turn];
   const cursor = cursorIndex === null ? actions.length : Math.min(cursorIndex, actions.length);
-  const priorActions = plan
-    .slice(0, wave)
-    .flat(2)
-    .concat(plan[wave].slice(0, turn).flat(), actions.slice(0, cursor));
+  // FGA clears enemy targeting at wave boundaries.
+  const priorActions = plan[wave].slice(0, turn).flat().concat(actions.slice(0, cursor));
   const enemyTarget = [...priorActions].reverse().find((action) => action.type === 'enemyTarget');
   const insert = (action: Action) => {
     const next = insertAction(plan, wave, turn, cursor, action);
