@@ -38,7 +38,13 @@ export function BattleLibraryPage() {
       <header className="flex flex-wrap items-center gap-2 border-b border-border p-4">
         <h1 className="mr-auto text-base font-semibold">{t('battle')}</h1>
         <span className="text-xs text-text-muted" role="status">
-          {t(state.loading ? 'globals.loading' : state.dirty ? 'unsaved' : 'saved')}
+          {t(
+            state.loading
+              ? 'globals.loading'
+              : state.dirty || state.recoveryDraft
+                ? 'unsaved'
+                : 'saved',
+          )}
         </span>
         <button
           className={button}
@@ -89,13 +95,29 @@ export function BattleLibraryPage() {
           role="alert"
           className="m-4 rounded-md border border-border bg-bg-secondary p-3 text-sm"
         >
-          {state.blocked ? t('loadFailed') : state.error}
+          {state.blocked ? t('loadFailed') : state.error && t('saveFailed')}
           {importError && t('importFailed', { message: importError })}
-          {state.blocked && (
-            <button className={`${button} ml-3`} onClick={state.retry}>
+          {state.error && (
+            <button
+              className={`${button} ml-3`}
+              disabled={state.loading || state.saving}
+              onClick={state.retry}
+            >
               {t('retry')}
             </button>
           )}
+        </div>
+      )}
+      {state.recoveryDraft && (
+        <div className="m-4 rounded-xl border border-border bg-bg-secondary p-4 text-sm">
+          <p>{t('recoveryHint')}</p>
+          <button
+            className={`${button} mt-2`}
+            disabled={state.blocked || state.loading}
+            onClick={state.restoreDraft}
+          >
+            {t('restoreDraft')}
+          </button>
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col sm:flex-row">

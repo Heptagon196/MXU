@@ -29,7 +29,7 @@ export const useFgaaSettingsStore = create<State>((set, get) => ({
   saving: false,
   loading: false,
   async save(values) {
-    if (get().blocked || get().saving) throw new Error('FGA storage is not ready');
+    if (get().blocked || get().loading || get().saving) throw new Error('FGA storage is not ready');
     const next = validateGlobals(values);
     set({ saving: true });
     try {
@@ -61,6 +61,6 @@ export const useFgaaSettingsStore = create<State>((set, get) => ({
 if (nativeStorage) void useFgaaSettingsStore.getState().retry();
 export function snapshotGlobals(): GlobalSettings {
   const state = useFgaaSettingsStore.getState();
-  if (state.blocked) throw new Error('FGA global settings could not be loaded');
+  if (state.blocked || state.loading) throw new Error('FGA global settings could not be loaded');
   return { ...state.values };
 }

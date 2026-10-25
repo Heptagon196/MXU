@@ -391,6 +391,13 @@ export default {
   editorPending: 'FGA 式技能编辑器正在迁移；现有技能指令与其他配置字段会完整保留。',
   localStorage: '配置保存在当前客户端；可导出 .fga 备份。',
   retry: '重新读取',
+  saveFailed: '保存失败，编辑已保留。可重试保存；若文件已改变，可重新读取并将当前草稿暂存。',
+  recoveryHint:
+    '重新读取前的草稿仍保留在本次会话中。可恢复为副本后保存或导出；关闭应用会丢失暂存草稿。',
+  restoreDraft: '将草稿恢复为副本',
+  settingsRecoveryHint:
+    '重新读取前的设置草稿保留在本次会话中。恢复后再次保存会替换当前设置；关闭应用会丢失暂存草稿。',
+  restoreSettingsDraft: '恢复设置草稿',
   loadFailed: '配置库读取失败，原始内容已保留。修复后可重新读取。',
   importFailed: '导入失败：{{message}}',
   chaldeaPending: 'Chaldea 模块正在接入',

@@ -32,6 +32,7 @@ export function ProductShell({ children }: { children: ReactNode }) {
     useAppStore.getState().setCurrentPage('main');
   }, [currentPage]);
   const dirty = useBattleStore((state) => state.dirty);
+  const recoveryDraft = useBattleStore((state) => state.recoveryDraft);
   const library = useBattleStore((state) => state.library);
   const hideSQ = useFgaaSettingsStore((state) => state.values.hide_sq_in_ap_resources);
   const pi = useAppStore((state) => state.projectInterface);
@@ -56,14 +57,14 @@ export function ProductShell({ children }: { children: ReactNode }) {
   }, [pi, library, hideSQ]);
   useEffect(() => {
     const preventLoss = (event: BeforeUnloadEvent) => {
-      if (dirty) {
+      if (dirty || recoveryDraft) {
         event.preventDefault();
         event.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', preventLoss);
     return () => window.removeEventListener('beforeunload', preventLoss);
-  }, [dirty]);
+  }, [dirty, recoveryDraft]);
   return (
     <div className="h-full flex flex-col bg-bg-primary text-text-primary">
       <nav

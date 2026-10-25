@@ -1,28 +1,66 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
-import { SwitchInput, formInputClass } from '@/components/FormControls';
+import { SwitchInput, formInputClass, formButtonClass } from '@/components/FormControls';
 import { SettingsGroup } from '@/components/ui/SettingsGroup';
-import { bounds, globalKeys, globalGroups, validateGlobals } from './globalSettings';
+import {
+  bounds,
+  globalKeys,
+  globalGroups,
+  validateGlobals,
+  type GlobalSettings,
+} from './globalSettings';
 export function GlobalSettingsPage() {
   const { t } = useTranslation('fgaa');
   const { values, blocked, saving, loading, save, retry } = useFgaaSettingsStore();
   const [status, setStatus] = useState('');
   const [dirty, setDirty] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
+  const [draft, setDraft] = useState<GlobalSettings | null>(null);
+  const [recovery, setRecovery] = useState<GlobalSettings | null>(null);
+  const displayed = draft ?? values;
+  const readForm = () => {
+    const data = new FormData(form.current!);
+    return validateGlobals(
+      Object.fromEntries(
+        globalKeys.map((key) => [
+          key,
+          typeof values[key] === 'boolean' ? data.has(key) : Number(data.get(key)),
+        ]),
+      ),
+    );
+  };
   useEffect(() => {
     const preventLoss = (event: BeforeUnloadEvent) => {
-      if (dirty) {
+      if (dirty || recovery) {
         event.preventDefault();
         event.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', preventLoss);
     return () => window.removeEventListener('beforeunload', preventLoss);
-  }, [dirty]);
+  }, [dirty, recovery]);
   return (
     <section className="mx-auto max-w-4xl p-6">
       <h1 className="text-lg font-semibold">{t('globals.title')}</h1>
       <p className="my-3 text-sm text-text-secondary">{t('globals.detail')}</p>
+      {recovery && (
+        <div className="my-4 rounded-xl border border-border bg-bg-secondary p-4 text-sm">
+          <p>{t('settingsRecoveryHint')}</p>
+          <button
+            className={`${formButtonClass} mt-2`}
+            disabled={blocked || loading || saving}
+            onClick={() => {
+              setDraft(recovery);
+              setRecovery(null);
+              setDirty(true);
+              setStatus('');
+            }}
+          >
+            {t('restoreSettingsDraft')}
+          </button>
+        </div>
+      )}
       {loading ? (
         <p role="status">{t('globals.loading')}</p>
       ) : blocked ? (
@@ -31,22 +69,17 @@ export function GlobalSettingsPage() {
         </div>
       ) : (
         <form
-          key={JSON.stringify(values)}
+          ref={form}
+          key={JSON.stringify(displayed)}
           onChange={() => {
             setDirty(true);
             setStatus('');
           }}
           onSubmit={async (event) => {
             event.preventDefault();
-            const data = new FormData(event.currentTarget);
             try {
-              const next = Object.fromEntries(
-                globalKeys.map((key) => [
-                  key,
-                  typeof values[key] === 'boolean' ? data.has(key) : Number(data.get(key)),
-                ]),
-              );
-              await save(validateGlobals(next));
+              await save(readForm());
+              setDraft(null);
               setDirty(false);
               setStatus('saved');
             } catch {
@@ -65,7 +98,7 @@ export function GlobalSettingsPage() {
                   >
                     <span>{t(`globals.fields.${key}`)}</span>
                     {typeof values[key] === 'boolean' ? (
-                      <SwitchInput name={key} defaultChecked={values[key] as boolean} />
+                      <SwitchInput name={key} defaultChecked={displayed[key] as boolean} />
                     ) : (
                       <input
                         className={`${formInputClass} w-24`}
@@ -75,7 +108,7 @@ export function GlobalSettingsPage() {
                         step="1"
                         min={bounds(key)[0]}
                         max={bounds(key)[1]}
-                        defaultValue={values[key] as number}
+                        defaultValue={displayed[key] as number}
                       />
                     )}
                   </label>
@@ -97,6 +130,28 @@ export function GlobalSettingsPage() {
                 ? t('unsaved')
                 : status && t(`globals.${status}`)}
           </p>
+          {status === 'error' && (
+            <button
+              className={formButtonClass}
+              type="button"
+              disabled={saving || loading}
+              onClick={async () => {
+                try {
+                  setRecovery(readForm());
+                  setDraft(null);
+                  await retry();
+                  if (!useFgaaSettingsStore.getState().blocked) {
+                    setDirty(false);
+                    setStatus('');
+                  }
+                } catch {
+                  setStatus('error');
+                }
+              }}
+            >
+              {t('retry')}
+            </button>
+          )}
         </form>
       )}
     </section>

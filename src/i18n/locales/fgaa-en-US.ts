@@ -395,6 +395,14 @@ export default {
     'The FGA-style skill editor is being migrated. Existing commands and all other settings are preserved.',
   localStorage: 'Stored in this client; export .fga files for backup.',
   retry: 'Reload',
+  saveFailed:
+    'Save failed; your edits are retained. Retry saving, or reload a changed file while retaining this draft.',
+  recoveryHint:
+    'The draft from before reloading is retained for this session. Restore it as copies, then save or export. Closing the app will lose this temporary draft.',
+  restoreDraft: 'Restore draft as copies',
+  settingsRecoveryHint:
+    'The settings draft is retained for this session. Restoring and saving it will replace the current settings. Closing the app will lose this temporary draft.',
+  restoreSettingsDraft: 'Restore settings draft',
   loadFailed:
     'Could not read the library. Its original contents are preserved. Reload after repairing it.',
   importFailed: 'Import failed: {{message}}',

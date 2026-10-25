@@ -24,6 +24,8 @@ interface BattleState {
   update(changes: FgaConfig): void;
   saving: boolean;
   loading: boolean;
+  recoveryDraft: BattleLibrary | null;
+  restoreDraft(): void;
   save(): Promise<void>;
   retry(): Promise<void>;
   undo(): void;
@@ -46,6 +48,18 @@ export const useBattleStore = create<BattleState>((set, get) => ({
   dirty: false,
   saving: false,
   loading: false,
+  recoveryDraft: null,
+  restoreDraft: () => {
+    const { recoveryDraft, library, blocked, loading } = get();
+    if (!recoveryDraft || blocked || loading) return;
+    const entries = recoveryDraft.entries.map((entry) => ({ ...entry, id: crypto.randomUUID() }));
+    set({
+      library: { version: 1, entries: [...library.entries, ...entries] },
+      selectedId: entries[0]?.id ?? get().selectedId,
+      recoveryDraft: null,
+      dirty: true,
+    });
+  },
   undoStacks: {},
   redoStacks: {},
   select: (id) => set({ selectedId: id }),
@@ -74,7 +88,7 @@ export const useBattleStore = create<BattleState>((set, get) => ({
   },
   undo: () => {
     const { selectedId, library, undoStacks, redoStacks } = get();
-    if (!selectedId || !undoStacks[selectedId]?.length) return;
+    if (get().blocked || !selectedId || !undoStacks[selectedId]?.length) return;
     const previous = undoStacks[selectedId][undoStacks[selectedId].length - 1];
     const current = library.entries.find((entry) => entry.id === selectedId)!.data;
     set({
@@ -91,7 +105,7 @@ export const useBattleStore = create<BattleState>((set, get) => ({
   },
   redo: () => {
     const { selectedId, library, undoStacks, redoStacks } = get();
-    if (!selectedId || !redoStacks[selectedId]?.length) return;
+    if (get().blocked || !selectedId || !redoStacks[selectedId]?.length) return;
     const next = redoStacks[selectedId][redoStacks[selectedId].length - 1];
     const current = library.entries.find((entry) => entry.id === selectedId)!.data;
     set({
@@ -124,8 +138,9 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     }
   },
   retry: async () => {
-    if (!get().blocked || get().loading) return;
-    set({ loading: true });
+    if (get().loading || get().saving) return;
+    const previous = get();
+    set({ loading: true, blocked: true });
     try {
       const state = nativeStorage
         ? {
@@ -138,7 +153,26 @@ export const useBattleStore = create<BattleState>((set, get) => ({
             error: null,
           }
         : read();
-      set({ ...state, selectedId: state.library.entries[0]?.id ?? null });
+      if (state.blocked) {
+        set({ blocked: true, error: state.error });
+        return;
+      }
+      const recoveryDraft = previous.dirty
+        ? {
+            version: 1 as const,
+            entries: [...(previous.recoveryDraft?.entries ?? []), ...previous.library.entries].map(
+              (entry) => ({ ...entry, id: crypto.randomUUID() }),
+            ),
+          }
+        : previous.recoveryDraft;
+      set({
+        ...state,
+        selectedId: state.library.entries[0]?.id ?? null,
+        dirty: false,
+        undoStacks: {},
+        redoStacks: {},
+        recoveryDraft,
+      });
     } catch (error) {
       set({ blocked: true, error: String(error) });
     } finally {

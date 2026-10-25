@@ -76,4 +76,32 @@ test('native stores migrate once, retain edits on IO failure and preserve edits 
   assert.equal(JSON.parse(disk.get('globals')!).values.click_duration, 99);
   useFgaaSettingsStore.setState({ blocked: true });
   assert.throws(snapshotGlobals);
+  useBattleStore.getState().update({ autoskill_name: '需要保留的草稿' });
+  const external = JSON.stringify({
+    version: 1,
+    entries: [{ id: 'external', data: { autoskill_name: '磁盘新版本' } }],
+  });
+  disk.set('library', external);
+  await useBattleStore.getState().save();
+  assert.equal(useBattleStore.getState().dirty, true);
+  assert.equal(disk.get('library'), external);
+  await useBattleStore.getState().retry();
+  assert.equal(useBattleStore.getState().library.entries[0].id, 'external');
+  assert.equal(
+    useBattleStore.getState().recoveryDraft!.entries[0].data.autoskill_name,
+    '需要保留的草稿',
+  );
+  useBattleStore.getState().restoreDraft();
+  const restored = useBattleStore.getState().library.entries;
+  assert.equal(restored.length, 2);
+  assert.equal(restored[0].data.autoskill_name, '磁盘新版本');
+  assert.equal(restored[1].data.autoskill_name, '需要保留的草稿');
+  assert.notEqual(restored[1].id, restored[0].id);
+  await useBattleStore.getState().save();
+  assert.equal(JSON.parse(disk.get('library')!).entries.length, 2);
+  const beforeCorruption = useBattleStore.getState().library;
+  disk.set('library', 'broken');
+  await useBattleStore.getState().retry();
+  assert.equal(useBattleStore.getState().blocked, true);
+  assert.equal(useBattleStore.getState().library, beforeCorruption);
 });
