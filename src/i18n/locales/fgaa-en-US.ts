@@ -323,6 +323,17 @@ export default {
     },
   },
   skill: {
+    open: 'Edit skill sequence',
+    fullscreenHint: 'Configure skills, targets and attacks in the full-screen editor.',
+    back: 'Back',
+    done: 'Done editing',
+    draftHint: 'Changes are kept in the current configuration. Save the library after editing.',
+    attack: 'Attack',
+    masterSkills: 'Master skills',
+    specialTargets: 'Special skill options',
+    selectedTargets: 'Selected target order',
+    enemyTargets: 'Enemy targets',
+
     invalidEdit:
       'This edit would merge attacks with more than 2 cards before NP. Adjust the attacks or insertion point; the original command is unchanged.',
     title: 'Skill sequence',

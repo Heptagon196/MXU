@@ -17,6 +17,7 @@ export function BattleLibraryPage() {
   const state = useBattleStore();
   const fileInput = useRef<HTMLInputElement>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const [section, setSection] = useState<'skills' | 'settings'>('skills');
   const selected = state.library.entries.find((entry) => entry.id === state.selectedId);
   const data = selected?.data;
@@ -37,6 +38,19 @@ export function BattleLibraryPage() {
   };
   return (
     <div className="h-full min-h-0 flex flex-col text-text-primary">
+      {editing && selected && (
+        <SkillEditor
+          key={selected.id}
+          name={field('autoskill_name')}
+          command={field('autoskill_cmd')}
+          onChanged={(value) => state.update({ autoskill_cmd: value })}
+          onClose={() => setEditing(false)}
+          onUndo={state.undo}
+          onRedo={state.redo}
+          canUndo={Boolean(state.undoStacks[selected.id]?.length)}
+          canRedo={Boolean(state.redoStacks[selected.id]?.length)}
+        />
+      )}
       <header className="flex flex-wrap items-center gap-2 border-b border-border p-4">
         <h1 className="mr-auto text-base font-semibold">{t('battle')}</h1>
         <span className="text-xs text-text-muted" role="status">
@@ -181,7 +195,10 @@ export function BattleLibraryPage() {
                 <button
                   className={button}
                   aria-pressed={section === 'skills'}
-                  onClick={() => setSection('skills')}
+                  onClick={() => {
+                    setSection('skills');
+                    setEditing(true);
+                  }}
                 >
                   {t('skill.title')}
                 </button>
@@ -232,11 +249,10 @@ export function BattleLibraryPage() {
                 <BattleSettings key={selected!.id} data={data} onChanged={state.update} />
               </div>
               <div hidden={section !== 'skills'}>
-                <SkillEditor
-                  key={selected!.id}
-                  command={field('autoskill_cmd')}
-                  onChanged={(value) => state.update({ autoskill_cmd: value })}
-                />
+                <button className={primaryButtonClass} onClick={() => setEditing(true)}>
+                  {t('skill.open')}
+                </button>
+                <p className="mt-2 text-sm text-text-secondary">{t('skill.fullscreenHint')}</p>
               </div>
               <section className="rounded-lg border border-border bg-bg-secondary p-4">
                 <h2 className="text-sm font-medium">{t('command')}</h2>

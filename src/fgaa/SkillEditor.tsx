@@ -1,8 +1,7 @@
-import { SelectInput } from '@/components/ui/SelectInput';
-import { formButtonClass } from '@/components/FormControls';
-import { CheckboxInput } from '@/components/FormControls';
-import { useMemo, useRef, useState } from 'react';
+import { formButtonClass, primaryButtonClass, CheckboxInput } from '@/components/FormControls';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft, Check, Undo2, Redo2, Swords, WandSparkles } from 'lucide-react';
 import { ModalPortal, useModalFocusTrap } from '@/components/ui/Modal';
 import {
   actionCommand,
@@ -15,114 +14,27 @@ import {
 } from './skillPlan';
 
 const button = formButtonClass;
+const largeButton = `${button} min-h-14 sm:min-h-20 min-w-16 text-base`;
 type SkillChoice = { type: 'servantSkill' | 'masterSkill' | 'commandSpell'; skill: string };
-
-function TargetDialog({
-  choice,
-  onClose,
-  onApply,
-}: {
-  choice: SkillChoice;
-  onClose(): void;
-  onApply(action: Action): void;
-}) {
-  const { t } = useTranslation('fgaa');
-  const ref = useRef<HTMLDivElement>(null);
-  useModalFocusTrap({ containerRef: ref, onEscape: onClose });
-  const [multiple, setMultiple] = useState(false);
-  const [targets, setTargets] = useState<string[]>([]);
-  const apply = (values: string[]) =>
-    onApply(
-      choice.type === 'servantSkill'
-        ? { ...choice, type: 'servantSkill', targets: values }
-        : { ...choice, type: choice.type, target: values[0] ?? null },
-    );
-  return (
-    <ModalPortal>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose();
-        }}
-      >
-        <div
-          ref={ref}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="fgaa-target-title"
-          className="w-full max-w-md max-h-[85dvh] rounded-xl border border-border bg-bg-secondary shadow-2xl overflow-hidden flex flex-col"
-        >
-          <div className="px-5 py-4 border-b border-border shrink-0">
-            <h2 id="fgaa-target-title" className="text-sm font-semibold text-text-primary">
-              {t('skill.targetTitle', { skill: choice.skill })}
-            </h2>
-          </div>
-          <div className="px-5 py-4 overflow-auto flex-1 min-h-0">
-            {choice.type === 'servantSkill' && (
-              <label className="mb-3 flex items-center gap-2 text-sm">
-                <CheckboxInput
-                  checked={multiple}
-                  onChange={(e) => {
-                    setMultiple(e.target.checked);
-                    setTargets([]);
-                  }}
-                />
-                {t('skill.multiTarget')}
-              </label>
-            )}
-            <div className="grid grid-cols-3 gap-2">
-              {servantTargets.map((target) => (
-                <button
-                  key={target}
-                  className={button}
-                  onClick={() => (multiple ? setTargets([...targets, target]) : apply([target]))}
-                >
-                  {t(`skill.targets.${target}`)}
-                </button>
-              ))}
-            </div>
-            {multiple && (
-              <div className="my-3 flex flex-wrap gap-1">
-                {targets.map((target, i) => (
-                  <button
-                    key={i}
-                    className={button}
-                    onClick={() => setTargets(targets.filter((_, index) => index !== i))}
-                  >
-                    {i + 1}. {t(`skill.targets.${target}`)} ×
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="px-5 py-4 flex flex-wrap justify-end gap-2 bg-bg-tertiary/30 shrink-0">
-            <button className={button} onClick={() => apply([])}>
-              {t('skill.noTarget')}
-            </button>
-            <button className={button} onClick={onClose}>
-              {t('skill.cancel')}
-            </button>
-            {multiple && (
-              <button
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-accent hover:bg-accent-hover transition-colors shadow-sm"
-                onClick={() => apply(targets)}
-              >
-                {t('skill.apply')}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </ModalPortal>
-  );
-}
 
 export function SkillEditor({
   command,
+  name,
   onChanged,
+  onClose,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: {
   command: string;
+  name: string;
   onChanged(command: string): void;
+  onClose(): void;
+  onUndo(): void;
+  onRedo(): void;
+  canUndo: boolean;
+  canRedo: boolean;
 }) {
   const { t } = useTranslation('fgaa');
   const parsed = useMemo(() => {
@@ -135,6 +47,7 @@ export function SkillEditor({
   const [waveIndex, setWave] = useState(0);
   const [turnIndex, setTurn] = useState(0);
   const [cursorIndex, setCursor] = useState<number | null>(null);
+  const [stage, setStage] = useState<'main' | 'attack' | 'master' | 'swap'>('main');
   const [choice, setChoice] = useState<SkillChoice | null>(null);
   const [nps, setNps] = useState<string[]>([]);
   const [cards, setCards] = useState(0);
@@ -152,23 +65,40 @@ export function SkillEditor({
       setEditError(true);
     }
   };
-  if (!parsed.plan)
-    return (
-      <p role="alert" className="text-sm text-text-secondary">
-        {t('skill.unsupported')}
-      </p>
-    );
-  const plan = parsed.plan;
+  const [multiple, setMultiple] = useState(false);
+  const [targets, setTargets] = useState<string[]>([]);
+  const root = useRef<HTMLDivElement>(null);
+  const back = () => {
+    if (choice) setChoice(null);
+    else if (stage !== 'main') setStage('main');
+    else onClose();
+  };
+  useModalFocusTrap({ containerRef: root, onEscape: back });
+  useEffect(() => {
+    root.current?.querySelector<HTMLElement>('[data-stage-focus]')?.focus();
+  }, [stage, choice]);
+  const chooseSkill = (next: SkillChoice) => {
+    setTargets([]);
+    setMultiple(false);
+    setChoice(next);
+  };
+  const plan = parsed.plan ?? [[[]]];
   const wave = Math.min(waveIndex, plan.length - 1);
   const turn = Math.min(turnIndex, plan[wave].length - 1);
   const actions = plan[wave][turn];
   const cursor = cursorIndex === null ? actions.length : Math.min(cursorIndex, actions.length);
+  const priorActions = plan
+    .slice(0, wave)
+    .flat(2)
+    .concat(plan[wave].slice(0, turn).flat(), actions.slice(0, cursor));
+  const enemyTarget = [...priorActions].reverse().find((action) => action.type === 'enemyTarget');
   const insert = (action: Action) => {
     const next = insertAction(plan, wave, turn, cursor, action);
     onChanged(planCommand(next));
     setEditError(false);
     setCursor(Math.min(cursor + 1, next[wave][turn].length));
     setChoice(null);
+    setStage('main');
   };
   const attack = (nextWave: boolean) => {
     commit(
@@ -189,205 +119,405 @@ export function SkillEditor({
         setCursor(0);
         setNps([]);
         setCards(0);
+        setStage('main');
       },
     );
   };
+  const applyTargets = (values: string[]) => {
+    if (!choice) return;
+    insert(
+      choice.type === 'servantSkill'
+        ? { ...choice, type: 'servantSkill', targets: values }
+        : { ...choice, type: choice.type, target: values[0] ?? null },
+    );
+  };
+  const stageTitle = choice
+    ? t('skill.targetTitle', { skill: choice.skill })
+    : t(
+        `skill.${stage === 'main' ? 'title' : stage === 'attack' ? 'attack' : stage === 'master' ? 'masterSkills' : 'swap'}`,
+      );
   return (
-    <section className="space-y-4 rounded-lg border border-border bg-bg-secondary p-4">
-      <h2 className="text-sm font-semibold">{t('skill.title')}</h2>
-      {editError && (
-        <p role="alert" className="text-sm text-text-secondary">
-          {t('skill.invalidEdit')}
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        {plan.map((_, i) => (
-          <button
-            key={i}
-            className={button}
-            aria-pressed={wave === i}
-            onClick={() => {
-              setWave(i);
-              setTurn(0);
-              setCursor(null);
-            }}
-          >
-            {t('skill.wave', { number: i + 1 })}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {plan[wave].map((_, i) => (
-          <button
-            key={i}
-            className={button}
-            aria-pressed={turn === i}
-            onClick={() => {
-              setTurn(i);
-              setCursor(null);
-            }}
-          >
-            {t('skill.turn', { number: i + 1 })}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2" aria-label={t('skill.history')}>
-        <button
-          className={`${button} ${cursor === 0 ? 'text-accent' : ''}`}
-          onClick={() => setCursor(0)}
-        >
-          {t('skill.start')}
-        </button>
-        {actions.map((action, i) => (
-          <button
-            key={i}
-            className={`${button} ${cursor === i + 1 ? 'bg-bg-active text-accent' : ''}`}
-            aria-pressed={cursor === i + 1}
-            onClick={() => setCursor(i + 1)}
-          >
-            {i + 1}. {actionCommand(action)}
-          </button>
-        ))}
-        <button
-          className={button}
-          disabled={cursor === 0}
-          onClick={() => {
-            const next = structuredClone(plan);
-            next[wave][turn].splice(cursor - 1, 1);
-            commit(
-              () => planCommand(next),
-              () => setCursor(cursor - 1),
-            );
-          }}
-        >
-          {t('skill.delete')}
-        </button>
-      </div>
-      <p className="text-xs text-text-muted">{t('skill.insertHint')}</p>
-      <div className="grid grid-cols-3 gap-2">
-        {[0, 1, 2].map((servant) => (
-          <div key={servant} className="rounded-md border border-border p-2">
-            <h3 className="mb-2 text-center text-xs text-text-secondary">
-              {t('skill.servant', { number: servant + 1 })}
-            </h3>
-            <div className="grid grid-cols-3 gap-1">
-              {[0, 1, 2].map((skill) => (
-                <button
-                  key={skill}
-                  className={`${button} !px-1 text-accent`}
-                  aria-label={t('skill.servantSkill', { servant: servant + 1, skill: skill + 1 })}
-                  onClick={() =>
-                    setChoice({ type: 'servantSkill', skill: 'abcdefghi'[servant * 3 + skill] })
-                  }
-                >
-                  {skill + 1}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {'jkl'.split('').map((skill, i) => (
-          <button
-            key={skill}
-            className={button}
-            onClick={() => setChoice({ type: 'masterSkill', skill })}
-          >
-            {t('skill.master', { number: i + 1 })}
-          </button>
-        ))}
-        <button className={button} onClick={() => setChoice({ type: 'commandSpell', skill: 'o' })}>
-          {t('skill.commandSpell')}
-        </button>
-        {'123'.split('').map((target) => (
-          <button
-            key={target}
-            className={button}
-            onClick={() => insert({ type: 'enemyTarget', target })}
-          >
-            {t('skill.enemy', { number: target })}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="text-xs">
-          {t('skill.front')}{' '}
-          <SelectInput
-            className="min-w-20"
-            aria-label={t('skill.front')}
-            value={starting}
-            onValueChange={(value) => setStarting(value)}
-          >
-            {[1, 2, 3].map((i) => (
-              <option key={i} value={String(i)}>
-                {i}
-              </option>
-            ))}
-          </SelectInput>
-        </label>
-        <label className="text-xs">
-          {t('skill.reserve')}{' '}
-          <SelectInput
-            className="min-w-20"
-            aria-label={t('skill.reserve')}
-            value={reserve}
-            onValueChange={(value) => setReserve(value)}
-          >
-            {[1, 2, 3].map((i) => (
-              <option key={i} value={String(i)}>
-                {i + 3}
-              </option>
-            ))}
-          </SelectInput>
-        </label>
-        <button
-          className={button}
-          onClick={() => insert({ type: 'orderChange', starting, sub: reserve })}
-        >
-          {t('skill.swap')}
-        </button>
-      </div>
-      <div className="border-t border-border pt-3 space-y-3">
-        <p className="text-xs text-text-secondary">{t('skill.npOrder')}</p>
-        <div className="flex flex-wrap gap-2">
-          {'456'.split('').map((np, i) => (
-            <button
-              key={np}
-              className={`${button} ${nps.includes(np) ? 'bg-bg-active text-accent' : ''}`}
-              aria-pressed={nps.includes(np)}
-              onClick={() => setNps(nps.includes(np) ? nps.filter((v) => v !== np) : [...nps, np])}
-            >
-              {t('skill.np', { number: i + 1 })}
-              {nps.includes(np) ? ` · ${nps.indexOf(np) + 1}` : ''}
+    <ModalPortal>
+      <div
+        ref={root}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('skill.title')}
+        className="fixed inset-0 z-50 flex min-h-0 flex-col bg-bg-primary text-text-primary"
+      >
+        <header className="shrink-0 border-b border-border bg-bg-secondary px-4 py-2 sm:px-6 sm:py-3">
+          <div className="flex items-center gap-2">
+            <button className={button} onClick={back} aria-label={t('skill.back')}>
+              <ArrowLeft size={16} />
             </button>
-          ))}
-        </div>
-        <label className="block text-xs">
-          {t('skill.beforeNp')}{' '}
-          <SelectInput
-            className="min-w-20"
-            aria-label={t('skill.beforeNp')}
-            value={cards}
-            onValueChange={(value) => setCards(Number(value))}
-          >
-            {[0, 1, 2].map((i) => (
-              <option key={i} value={i}>
-                {i}
-              </option>
-            ))}
-          </SelectInput>
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <button className={`${button} text-accent`} onClick={() => attack(false)}>
-            {t('skill.nextTurn')}
-          </button>
-          <button className={`${button} text-accent`} onClick={() => attack(true)}>
-            {t('skill.nextWave')}
-          </button>
-        </div>
+            <h1 className="min-w-0 flex-1 truncate text-base font-semibold">
+              {stageTitle}
+              <span className="ml-3 text-sm font-normal text-text-muted">{name}</span>
+            </h1>
+            <span className="text-xs text-text-secondary whitespace-nowrap">
+              {t('skill.wave', { number: wave + 1 })} · {t('skill.turn', { number: turn + 1 })}
+            </span>
+            <button className={primaryButtonClass} onClick={onClose}>
+              <Check size={16} />
+              {t('skill.done')}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-text-muted">{t('skill.draftHint')}</p>
+        </header>
+        {!parsed.plan ? (
+          <p role="alert" className="p-6">
+            {t('skill.unsupported')}
+          </p>
+        ) : (
+          <>
+            {editError && (
+              <p role="alert" className="px-4 py-2 text-sm text-error">
+                {t('skill.invalidEdit')}
+              </p>
+            )}
+            <main className="flex-1 min-h-0 overflow-auto p-3 sm:p-6 flex flex-col">
+              {choice ? (
+                <section className="flex flex-1 min-h-0 flex-col gap-4" aria-label={stageTitle}>
+                  <div className="flex-1 flex items-center justify-evenly gap-3">
+                    {servantTargets.slice(0, 3).map((target) => (
+                      <button
+                        key={target}
+                        data-stage-focus={target === '1' ? true : undefined}
+                        className={`${largeButton} w-1/4 max-w-52`}
+                        onClick={() =>
+                          multiple ? setTargets([...targets, target]) : applyTargets([target])
+                        }
+                      >
+                        {t(`skill.targets.${target}`)}
+                      </button>
+                    ))}
+                  </div>
+                  {choice.type === 'servantSkill' && (
+                    <label className="flex items-center justify-center gap-2 text-sm">
+                      <CheckboxInput
+                        checked={multiple}
+                        onChange={(e) => {
+                          setMultiple(e.target.checked);
+                          setTargets([]);
+                        }}
+                      />
+                      {t('skill.multiTarget')}
+                    </label>
+                  )}
+                  {multiple && (
+                    <div
+                      className="flex flex-wrap justify-center gap-2"
+                      aria-label={t('skill.selectedTargets')}
+                    >
+                      {targets.map((target, i) => (
+                        <button
+                          key={i}
+                          className={button}
+                          onClick={() => setTargets(targets.filter((_, index) => index !== i))}
+                        >
+                          {i + 1}. {t(`skill.targets.${target}`)} ×
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <details className="rounded-xl border border-border bg-bg-secondary p-3">
+                    <summary className="cursor-pointer text-sm">
+                      {t('skill.specialTargets')}
+                    </summary>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {servantTargets.slice(3).map((target) => (
+                        <button
+                          className={button}
+                          key={target}
+                          onClick={() =>
+                            multiple ? setTargets([...targets, target]) : applyTargets([target])
+                          }
+                        >
+                          {t(`skill.targets.${target}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                  <div className="flex shrink-0 justify-center gap-2">
+                    <button className={button} onClick={() => applyTargets([])}>
+                      {t('skill.noTarget')}
+                    </button>
+                    <button className={button} onClick={() => setChoice(null)}>
+                      {t('skill.cancel')}
+                    </button>
+                    {multiple && (
+                      <button
+                        className={primaryButtonClass}
+                        disabled={!targets.length}
+                        onClick={() => applyTargets(targets)}
+                      >
+                        {t('skill.apply')}
+                      </button>
+                    )}
+                  </div>
+                </section>
+              ) : stage === 'attack' ? (
+                <section className="flex flex-1 flex-col gap-4" aria-label={t('skill.attack')}>
+                  <p className="text-center text-sm text-text-secondary">{t('skill.npOrder')}</p>
+                  <div className="flex flex-1 items-center justify-center gap-4">
+                    {'456'.split('').map((np, i) => (
+                      <button
+                        key={np}
+                        data-stage-focus={i === 0 ? true : undefined}
+                        className={`${largeButton} relative h-28 w-24 sm:h-40 sm:w-32 flex-col`}
+                        aria-pressed={nps.includes(np)}
+                        onClick={() =>
+                          setNps(nps.includes(np) ? nps.filter((v) => v !== np) : [...nps, np])
+                        }
+                      >
+                        {t('skill.np', { number: i + 1 })}
+                        {nps.includes(np) && (
+                          <span className="rounded-full bg-accent text-white px-2 text-sm">
+                            {nps.indexOf(np) + 1}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div role="group" aria-label={t('skill.beforeNp')}>
+                      <p className="mb-2 text-sm">{t('skill.beforeNp')}</p>
+                      <div className="flex gap-2">
+                        {[0, 1, 2].map((n) => (
+                          <button
+                            className={button}
+                            key={n}
+                            aria-pressed={cards === n}
+                            onClick={() => setCards(n)}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className={primaryButtonClass} onClick={() => attack(false)}>
+                        {t('skill.nextTurn')}
+                      </button>
+                      <button className={primaryButtonClass} onClick={() => attack(true)}>
+                        {t('skill.nextWave')}
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              ) : stage === 'master' ? (
+                <section className="flex flex-1 items-center justify-evenly gap-4 flex-wrap">
+                  <button data-stage-focus className={largeButton} onClick={() => setStage('swap')}>
+                    {t('skill.swap')}
+                  </button>
+                  <div className="flex gap-3">
+                    {'jkl'.split('').map((skill, i) => (
+                      <button
+                        className={largeButton}
+                        key={skill}
+                        onClick={() => chooseSkill({ type: 'masterSkill', skill })}
+                      >
+                        {t('skill.master', { number: i + 1 })}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : stage === 'swap' ? (
+                <section className="flex flex-1 flex-col justify-around gap-4">
+                  {[
+                    ['front', starting, setStarting],
+                    ['reserve', reserve, setReserve],
+                  ].map(([label, value, setValue]) => (
+                    <div key={String(label)} role="group" aria-label={t(`skill.${label}`)}>
+                      <h2 className="mb-3 text-center text-sm">{t(`skill.${label}`)}</h2>
+                      <div className="flex justify-evenly gap-3">
+                        {[1, 2, 3].map((n) => (
+                          <button
+                            key={n}
+                            className={`${largeButton} w-1/4 max-w-52`}
+                            aria-pressed={value === String(n)}
+                            onClick={() => (setValue as (v: string) => void)(String(n))}
+                          >
+                            {t('skill.servant', { number: label === 'front' ? n : n + 3 })}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    className={`${primaryButtonClass} self-center`}
+                    onClick={() => insert({ type: 'orderChange', starting, sub: reserve })}
+                  >
+                    {t('skill.swap')}
+                  </button>
+                </section>
+              ) : (
+                <section className="flex flex-1 flex-col gap-3" aria-label={t('skill.title')}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex gap-2" role="group" aria-label={t('skill.enemyTargets')}>
+                      {'123'.split('').map((target) => (
+                        <button
+                          key={target}
+                          data-stage-focus={target === '1' ? true : undefined}
+                          className={button}
+                          aria-pressed={
+                            enemyTarget?.type === 'enemyTarget' && enemyTarget.target === target
+                          }
+                          onClick={() => insert({ type: 'enemyTarget', target })}
+                        >
+                          {t('skill.enemy', { number: target })}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className={button}
+                        onClick={() => chooseSkill({ type: 'commandSpell', skill: 'o' })}
+                      >
+                        {t('skill.commandSpell')}
+                      </button>
+                      <button className={button} onClick={() => setStage('master')}>
+                        <WandSparkles size={16} />
+                        {t('skill.masterSkills')}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto shrink-0 pb-1">
+                    {plan.map((_, i) => (
+                      <button
+                        className={`${button} whitespace-nowrap`}
+                        key={i}
+                        aria-pressed={wave === i}
+                        onClick={() => {
+                          setWave(i);
+                          setTurn(0);
+                          setCursor(null);
+                        }}
+                      >
+                        {t('skill.wave', { number: i + 1 })}
+                      </button>
+                    ))}
+                    <span className="border-l border-border" />
+                    {plan[wave].map((_, i) => (
+                      <button
+                        className={`${button} whitespace-nowrap`}
+                        key={i}
+                        aria-pressed={turn === i}
+                        onClick={() => {
+                          setTurn(i);
+                          setCursor(null);
+                        }}
+                      >
+                        {t('skill.turn', { number: i + 1 })}
+                      </button>
+                    ))}
+                  </div>
+                  <div
+                    className="flex gap-2 overflow-x-auto shrink-0 pb-1"
+                    aria-label={t('skill.history')}
+                  >
+                    <button
+                      className={`${button} shrink-0`}
+                      aria-pressed={cursor === 0}
+                      onClick={() => setCursor(0)}
+                    >
+                      {t('skill.start')}
+                    </button>
+                    {actions.map((action, i) => (
+                      <button
+                        key={i}
+                        className={`${button} shrink-0 font-mono`}
+                        aria-pressed={cursor === i + 1}
+                        onClick={() => setCursor(i + 1)}
+                      >
+                        {i + 1}. {actionCommand(action)}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <button
+                      className={button}
+                      disabled={cursor === 0}
+                      onClick={() => {
+                        const next = structuredClone(plan);
+                        next[wave][turn].splice(cursor - 1, 1);
+                        commit(
+                          () => planCommand(next),
+                          () => setCursor(cursor - 1),
+                        );
+                      }}
+                    >
+                      {t('skill.delete')}
+                    </button>
+                    <button className={button} disabled={!canUndo} onClick={onUndo}>
+                      <Undo2 size={16} />
+                      {t('skill.undo')}
+                    </button>
+                    <button className={button} disabled={!canRedo} onClick={onRedo}>
+                      <Redo2 size={16} />
+                      {t('skill.redo')}
+                    </button>
+                    <span className="text-xs text-text-muted">{t('skill.insertHint')}</span>
+                  </div>
+                  <div className="flex flex-1 min-h-12 items-center justify-end">
+                    <button
+                      className={`${primaryButtonClass} min-h-16 sm:min-h-24 min-w-24 sm:min-w-28 rounded-full`}
+                      onClick={() => {
+                        setNps([]);
+                        setCards(0);
+                        setStage('attack');
+                      }}
+                    >
+                      <Swords size={20} />
+                      {t('skill.attack')}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 sm:gap-12 shrink-0">
+                    {[0, 1, 2].map((servant) => (
+                      <div
+                        key={servant}
+                        className="rounded-xl border border-border bg-bg-secondary p-2 sm:p-3"
+                      >
+                        <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                          {[0, 1, 2].map((skill) => (
+                            <button
+                              key={skill}
+                              className={`${button} min-h-12 sm:min-h-16 !px-1 font-mono text-lg`}
+                              aria-label={t('skill.servantSkill', {
+                                servant: servant + 1,
+                                skill: skill + 1,
+                              })}
+                              onClick={() =>
+                                chooseSkill({
+                                  type: 'servantSkill',
+                                  skill: 'abcdefghi'[servant * 3 + skill],
+                                })
+                              }
+                            >
+                              {'abcdefghi'[servant * 3 + skill]}
+                            </button>
+                          ))}
+                        </div>
+                        <h2 className="mt-2 text-center text-sm">
+                          {t('skill.servant', { number: servant + 1 })}
+                        </h2>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </main>
+            <footer className="shrink-0 border-t border-border px-4 py-2 bg-bg-secondary">
+              <pre
+                aria-label={t('command')}
+                className="overflow-x-auto text-xs text-text-muted whitespace-nowrap"
+              >
+                {command || t('noCommand')}
+              </pre>
+            </footer>
+          </>
+        )}
       </div>
-      {choice && <TargetDialog choice={choice} onClose={() => setChoice(null)} onApply={insert} />}
-    </section>
+    </ModalPortal>
   );
 }

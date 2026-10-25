@@ -321,6 +321,17 @@ export default {
     },
   },
   skill: {
+    open: '编辑技能顺序',
+    fullscreenHint: '在独立全屏编辑界面中配置技能、目标和出牌顺序。',
+    back: '返回',
+    done: '完成编辑',
+    draftHint: '修改已保留到当前配置，退出编辑后可保存配置库。',
+    attack: '攻击',
+    masterSkills: '御主技能',
+    specialTargets: '特殊技能选项',
+    selectedTargets: '已选目标顺序',
+    enemyTargets: '敌方目标',
+
     invalidEdit:
       '此操作会合并出牌动作，使宝具前普通卡超过 2 张。请调整出牌动作或插入位置；原指令未修改。',
     title: '技能顺序',

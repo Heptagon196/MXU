@@ -58,43 +58,57 @@ test('mobile tabs and empty library remain operable', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('skill board preserves repeated targets, NP order and undo across tabs', async ({ page }) => {
+test('full-screen editor preserves targets, attacks, history and saved commands', async ({
+  page,
+}) => {
   await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
   await page.goto('/');
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await page.getByRole('button', { name: '新建配置', exact: true }).click();
-  await page.getByRole('button', { name: '从者 1 技能 1', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog.getByRole('checkbox').check();
-  await dialog.getByRole('button', { name: '从者 1', exact: true }).click();
-  await dialog.getByRole('button', { name: '从者 1', exact: true }).click();
-  await dialog.getByRole('button', { name: '添加', exact: true }).click();
-  const command = page.locator('main pre');
+  await expect(page.getByRole('button', { name: '从者 1 技能 1', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '编辑技能顺序', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: '技能顺序', exact: true });
+  expect(await editor.boundingBox()).toEqual({ x: 0, y: 0, width: 1360, height: 900 });
+  const command = editor.getByLabel('技能指令预览');
+  await editor.getByRole('button', { name: '从者 1 技能 1', exact: true }).click();
+  await editor.getByRole('checkbox').check();
+  await editor.getByRole('button', { name: '从者 1', exact: true }).click();
+  await editor.getByRole('button', { name: '从者 1', exact: true }).click();
+  await editor.getByRole('button', { name: '添加', exact: true }).click();
   await expect(command).toHaveText('a(11)');
-  await page.getByRole('button', { name: '宝具 3', exact: true }).click();
-  await page.getByRole('button', { name: '宝具 1', exact: true }).click();
-  await choose(page, page.getByLabel('宝具前普通卡数'), '1');
-  await page.getByRole('button', { name: '出牌 → 下一波次', exact: true }).click();
+  await editor.getByRole('button', { name: '攻击', exact: true }).click();
+  await editor.getByRole('button', { name: '宝具 3', exact: true }).click();
+  await editor.getByRole('button', { name: '宝具 1', exact: true }).click();
+  await editor
+    .getByRole('group', { name: '宝具前普通卡数' })
+    .getByRole('button', { name: '1', exact: true })
+    .click();
+  await expect(
+    editor
+      .getByRole('group', { name: '宝具前普通卡数' })
+      .getByRole('button', { name: '1', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.screenshot({ path: 'test-results/fgaa-fullscreen-attack.png' });
+  await editor.getByRole('button', { name: '出牌 → 下一波次', exact: true }).click();
   await expect(command).toHaveText('a(11)64n1,#,');
-  await page.getByRole('tab', { name: 'Chaldea', exact: true }).click();
-  await page.getByRole('tab', { name: /^战斗配置/ }).click();
-  await page.getByRole('button', { name: '撤销', exact: true }).click();
+  await editor.getByRole('button', { name: '撤销', exact: true }).click();
   await expect(command).toHaveText('a(11)');
-  await page.getByRole('button', { name: '重做', exact: true }).click();
+  await editor.getByRole('button', { name: '重做', exact: true }).click();
   await expect(command).toHaveText('a(11)64n1,#,');
-  await page.getByRole('button', { name: '波次 1', exact: true }).click();
-  await page.getByRole('button', { name: '1. a(11)', exact: true }).click();
-  await page.getByRole('button', { name: '敌方 2', exact: true }).click();
+  await editor.getByRole('button', { name: '波次 1', exact: true }).click();
+  await editor.getByRole('button', { name: '1. a(11)', exact: true }).click();
+  await editor.getByRole('button', { name: '敌方 2', exact: true }).click();
   await expect(command).toHaveText('a(11)t264n1,#,');
+  await page.screenshot({ path: 'test-results/fgaa-fullscreen-main.png' });
+  await editor.getByRole('button', { name: '完成编辑', exact: true }).click();
+  await expect(editor).toHaveCount(0);
   await page.getByRole('button', { name: '保存配置库', exact: true }).click();
-  await page.getByRole('heading', { name: '技能顺序', exact: true }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/fgaa-skill.png', fullPage: true });
   await page.reload();
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
-  await expect(command).toHaveText('a(11)t264n1,#,');
+  await expect(page.locator('main pre')).toHaveText('a(11)t264n1,#,');
 });
 
-test('target dialog stays usable in a short viewport and restores keyboard focus', async ({
+test('full-screen steps cancel safely and restore entry focus in a short viewport', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 640, height: 360 });
@@ -102,24 +116,37 @@ test('target dialog stays usable in a short viewport and restores keyboard focus
   await page.goto('/');
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await page.getByRole('button', { name: '新建配置', exact: true }).click();
-  const skill = page.getByRole('button', { name: '从者 1 技能 1', exact: true });
-  const initialCommand = await page.locator('main pre').innerText();
-  await skill.click();
-  const dialog = page.getByRole('dialog');
-  await dialog.getByRole('checkbox').press('Space');
-  await expect(dialog.getByRole('checkbox')).toBeChecked();
-  for (let index = 0; index < 20; index++)
-    await dialog.getByRole('button', { name: '从者 1', exact: true }).click();
-  const apply = dialog.getByRole('button', { name: '添加', exact: true });
-  await expect(apply).toBeInViewport();
-  await apply.focus();
-  await page.keyboard.press('Tab');
-  await expect(dialog.getByRole('checkbox')).toBeFocused();
-  await page.screenshot({ path: 'test-results/fgaa-target-short.png' });
+  const entry = page.getByRole('button', { name: '编辑技能顺序', exact: true });
+  await entry.click();
+  const editor = page.getByRole('dialog');
+  await editor.getByRole('button', { name: '从者 1 技能 1', exact: true }).click();
+  await editor.getByRole('checkbox').check();
+  for (let i = 0; i < 20; i++)
+    await editor.getByRole('button', { name: '从者 1', exact: true }).click();
+  await editor.getByRole('button', { name: '添加', exact: true }).scrollIntoViewIfNeeded();
+  await expect(editor.getByRole('button', { name: '添加', exact: true })).toBeInViewport();
   await page.keyboard.press('Escape');
-  await expect(dialog).toHaveCount(0);
-  await expect(skill).toBeFocused();
-  await expect(page.locator('main pre')).toHaveText(initialCommand);
+  await expect(editor.getByRole('button', { name: '攻击', exact: true })).toBeVisible();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('尚未配置技能顺序');
+  await editor.getByRole('button', { name: '御主技能', exact: true }).click();
+  await editor.getByRole('button', { name: '换人', exact: true }).click();
+  await editor
+    .getByRole('group', { name: '前排位置' })
+    .getByRole('button', { name: '从者 2', exact: true })
+    .click();
+  await editor
+    .getByRole('group', { name: '后排位置' })
+    .getByRole('button', { name: '从者 6', exact: true })
+    .click();
+  await editor.getByRole('button', { name: '换人', exact: true }).click();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('x23');
+  await editor.getByRole('button', { name: '从者 2 技能 2', exact: true }).click();
+  await page.screenshot({ path: 'test-results/fgaa-fullscreen-target-short.png' });
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(editor).toHaveCount(0);
+  await expect(entry).toBeFocused();
+  await expect(page.locator('main pre')).toHaveText('x23');
 });
 
 test('invalid merged attacks leave the original configuration editable', async ({ page }) => {
@@ -131,12 +158,14 @@ test('invalid merged attacks leave the original configuration editable', async (
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify({ autoskill_name: '出牌边界', autoskill_cmd: 'n2an2' })),
   });
-  await page.getByRole('button', { name: '2. a', exact: true }).click();
-  await page.getByRole('button', { name: '删除选中动作', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('原指令未修改');
-  await expect(page.locator('main pre')).toHaveText('n2an2');
-  await page.getByRole('button', { name: '敌方 1', exact: true }).click();
-  await expect(page.locator('main pre')).toHaveText('n2at1n2');
+  await page.getByRole('button', { name: '编辑技能顺序', exact: true }).click();
+  const editor = page.getByRole('dialog');
+  await editor.getByRole('button', { name: '2. a', exact: true }).click();
+  await editor.getByRole('button', { name: '删除选中动作', exact: true }).click();
+  await expect(editor.getByRole('alert')).toContainText('原指令未修改');
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('n2an2');
+  await editor.getByRole('button', { name: '敌方 1', exact: true }).click();
+  await expect(editor.getByLabel('技能指令预览')).toHaveText('n2at1n2');
 });
 
 test('battle settings export original FGA types and retain inactive support values', async ({
@@ -282,14 +311,15 @@ test('MXU dropdown keyboard navigation and viewport placement', async ({ page })
   await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
   await page.getByRole('button', { name: '新建配置', exact: true }).click();
   await page.setViewportSize({ width: 640, height: 360 });
-  const trigger = page.getByLabel('宝具前普通卡数', { exact: true });
+  await page.getByRole('button', { name: '战斗设置', exact: true }).click();
+  const trigger = page.getByLabel('出战队伍', { exact: true });
   await trigger.focus();
   await trigger.press('ArrowDown');
   const menu = page.getByRole('listbox');
   await expect(menu).toBeVisible();
   await menu.press('End');
   await menu.press('Enter');
-  await expect(trigger).toHaveAttribute('value', '2');
+  await expect(trigger).toHaveAttribute('value', '14');
   await expect(trigger).toBeFocused();
   await trigger.press('ArrowDown');
   await expect(menu).toBeVisible();

@@ -1208,7 +1208,7 @@ export function OptionSelectDropdown({
                     onChange(opt.value);
                     closeAndFocusTrigger();
                   }}
-                  onMouseEnter={() => setActiveIndex(index)}
+                  onMouseMove={() => setActiveIndex(index)}
                   className={clsx(
                     'w-full px-3 py-2 text-left text-sm flex items-center justify-between gap-2',
                     isActive
