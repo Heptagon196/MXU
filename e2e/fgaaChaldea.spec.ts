@@ -1,5 +1,41 @@
 import { test, expect } from '@playwright/test';
 
+test('module settings are grouped and persist in the real Chaldea database', async ({ page }) => {
+  test.skip(process.env.FGAA_CHALDEA_SMOKE !== '1', 'Requires built Chaldea module');
+  test.setTimeout(90000);
+  await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
+  const openSettings = async () => {
+    await page.getByRole('tab', { name: '全局设置', exact: true }).click();
+    const categories = page.getByRole('navigation', { name: '设置分类' });
+    await expect(categories.getByRole('button', { name: '主框架', exact: true })).toBeVisible();
+    await expect(categories.getByRole('button', { name: 'FGA', exact: true })).toBeVisible();
+    await categories.getByRole('button', { name: 'Chaldea', exact: true }).click();
+    await expect(page.getByRole('group', { name: '镜像源', exact: true })).toBeVisible({
+      timeout: 45000,
+    });
+  };
+  await page.goto('/');
+  await openSettings();
+  const mirror = page.getByLabel('游戏数据镜像', { exact: true });
+  const original = await mirror.isChecked();
+  await mirror.setChecked(!original);
+  const categories = page.getByRole('navigation', { name: '设置分类' });
+  await categories.getByRole('button', { name: 'FGA', exact: true }).click();
+  for (const name of ['战斗与停止条件', '助战选择', '识别与匹配', '操作与等待', '截图、录屏与调试'])
+    await expect(page.getByRole('group', { name, exact: true })).toBeVisible();
+  await categories.getByRole('button', { name: 'Chaldea', exact: true }).click();
+  await expect(mirror).toBeChecked({ checked: !original });
+  await page.getByRole('button', { name: '保存 Chaldea 设置', exact: true }).click();
+  await expect(page.getByText('已保存到 Chaldea', { exact: true })).toBeVisible();
+  await page.screenshot({ path: 'test-results/chaldea-settings.png', fullPage: true });
+  await page.reload();
+  await openSettings();
+  await expect(mirror).toBeChecked({ checked: !original });
+  await mirror.setChecked(original);
+  await page.getByRole('button', { name: '保存 Chaldea 设置', exact: true }).click();
+  await expect(page.getByText('已保存到 Chaldea', { exact: true })).toBeVisible();
+});
+
 test('built Chaldea module starts inside the product tab', async ({ page }) => {
   test.skip(
     process.env.FGAA_CHALDEA_SMOKE !== '1',

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { bindChaldeaWindow } from './chaldeaSettings';
 
 /** Load the bundled Chaldea app once; switching product tabs preserves its state. */
 export function ChaldeaPage({ active }: { active: boolean }) {
@@ -25,7 +26,12 @@ export function ChaldeaPage({ active }: { active: boolean }) {
   }, [active, attempt]);
   if (state === 'ready')
     return (
-      <iframe title={t('chaldea')} src="/chaldea/index.html" className="h-full w-full border-0" />
+      <iframe
+        title={t('chaldea')}
+        src="/chaldea/index.html"
+        className="h-full w-full border-0"
+        onLoad={(event) => bindChaldeaWindow(event.currentTarget.contentWindow)}
+      />
     );
   return (
     <div className="p-6 text-sm text-text-secondary" role="status">

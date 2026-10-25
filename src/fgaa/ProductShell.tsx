@@ -146,7 +146,9 @@ export function ProductShell({ children }: { children: ReactNode }) {
         hidden={page !== 'chaldea'}
         className="flex-1 min-h-0"
       >
-        <ChaldeaPage active={page === 'chaldea'} />
+        <ChaldeaPage
+          active={page === 'chaldea' || (page === 'settings' && settingsSection === 'chaldea')}
+        />
       </div>
     </div>
   );
