@@ -1,4 +1,13 @@
 export default {
+  materials: {
+    title: 'Material tracking',
+    hint: 'Select drops to track. Set the stop quantity on each farming task. Unknown imported materials are retained and can be removed individually.',
+    selected: 'Selected materials',
+    remove: 'Remove {{name}}',
+    empty: 'No materials selected',
+    search: 'Search materials',
+    noResults: 'No matching materials',
+  },
   settings: {
     title: 'Battle settings',
     battle: 'Server and battle',

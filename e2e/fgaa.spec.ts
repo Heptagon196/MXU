@@ -113,6 +113,11 @@ test('battle settings export original FGA types and retain inactive support valu
   await page.getByRole('button', { name: '战斗设置', exact: true }).click();
   await page.getByLabel('出战队伍', { exact: true }).selectOption('14');
   await page.getByLabel('配置区服', { exact: true }).selectOption('Cn');
+  await page.getByRole('searchbox', { name: '搜索素材' }).fill('Bone');
+  await page.getByRole('checkbox', { name: '凶骨', exact: true }).check();
+  await page.getByRole('searchbox', { name: '搜索素材' }).fill('英雄');
+  await page.getByRole('checkbox', { name: '英雄之证', exact: true }).check();
+  await page.getByRole('button', { name: '移除 英雄之证', exact: true }).click();
   await page.getByLabel('启用 Raid 回合延时', { exact: true }).check();
   await page.getByLabel('回合延时（秒）', { exact: true }).selectOption('7');
   await page.getByLabel('自动选择敌方目标', { exact: true }).check();
@@ -132,6 +137,7 @@ test('battle settings export original FGA types and retain inactive support valu
   const exported = JSON.parse(await readFile((await download.path())!, 'utf8'));
   expect(exported).toMatchObject({
     autoskill_party: '14',
+    battle_config_mat: ['Bone'],
     battle_config_server: 'Cn',
     add_raid_delay: true,
     raid_delay_seconds: '7',
@@ -150,4 +156,33 @@ test('battle settings export original FGA types and retain inactive support valu
   await expect(page.getByLabel('回合延时（秒）', { exact: true })).toHaveValue('7');
   await page.getByLabel('助战选择方式', { exact: true }).selectOption('Preferred');
   await expect(page.getByLabel('从者匹配项', { exact: true })).toHaveValue('servant-a\nservant-b');
+  await expect(page.getByRole('button', { name: '移除 凶骨', exact: true })).toBeVisible();
+  await page.getByRole('searchbox', { name: '搜索素材' }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/fgaa-materials.png', fullPage: true });
+});
+
+test('material selection preserves unknown imported identifiers', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
+  await page.goto('/');
+  await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+  await page.getByLabel('导入 .fga', { exact: true }).setInputFiles({
+    name: 'future.fga',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({ autoskill_name: '未来素材', battle_config_mat: ['FutureMaterial'] }),
+    ),
+  });
+  await page.getByRole('button', { name: '战斗设置', exact: true }).click();
+  await page.getByRole('searchbox', { name: '搜索素材' }).fill('凶骨');
+  await page.getByRole('checkbox', { name: '凶骨', exact: true }).check();
+  await expect(
+    page.getByRole('button', { name: '移除 FutureMaterial', exact: true }),
+  ).toBeVisible();
+  const downloaded = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出 .fga', exact: true }).click();
+  const download = await downloaded;
+  expect(JSON.parse(await readFile((await download.path())!, 'utf8')).battle_config_mat).toEqual([
+    'FutureMaterial',
+    'Bone',
+  ]);
 });

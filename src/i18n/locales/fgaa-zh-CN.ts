@@ -1,4 +1,13 @@
 export default {
+  materials: {
+    title: '素材统计',
+    hint: '选择需要统计的掉落素材；停止数量在每个刷本任务中设置。导入的未知素材会保留，可单独移除。',
+    selected: '已选素材',
+    remove: '移除 {{name}}',
+    empty: '尚未选择素材',
+    search: '搜索素材',
+    noResults: '没有匹配素材',
+  },
   settings: {
     title: '战斗设置',
     battle: '区服与战斗',

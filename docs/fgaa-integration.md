@@ -8,7 +8,8 @@ This fork tracks MaaXYZ/MXU and adds FGAA feature pages without replacing MXU's 
 - `src/fgaa/BattleLibraryPage.tsx` supports import, export, duplication, metadata and party editing. `SkillEditor.tsx` adds nine servant skills, repeated/special targets, master skills, command spells, enemy selection, order change, ordered NPs and insertion within wave/turn history. Undo/redo stays with each configuration across feature navigation. Remaining battle settings are being migrated.
 - `skillPlan.ts` models the editable command grammar. Uneditable imported commands remain unchanged. Invalid edits that merge attacks beyond the card limit leave the original command intact. Game execution still uses the original Kotlin parser, not this editor parser.
 - The Chaldea feature page is an explicit integration placeholder. It does not yet embed the module.
-- Battle settings now have a separate section from the skill board. Server, raid delay, enemy targeting and all support selection fields are editable. Inactive support preferences remain stored when switching modes. Image-reference lists use explicit Apply buttons before library save. Material selection, card policies and spam settings are still pending migration.
+- Battle settings now have a separate section from the skill board. Server, raid delay, enemy targeting and all support selection fields are editable. Inactive support preferences remain stored when switching modes. Image-reference lists use explicit Apply buttons before library save. Material selection supports bilingual search over 97 FGA materials and preserves unknown imported identifiers. Card policies and spam settings are still pending migration.
+- `src/i18n/locales/fgaa-materials.json` is generated from the pinned FGA enum and English/Chinese localization. Regenerate from the host with `python tools/generate-material-catalog.py --mxu`; add `--check` to verify it after an upstream update.
 - Translation resources live under `src/i18n/locales/fgaa-*`. Other languages fall back to English.
 
 Verification: `pnpm build`, `pnpm test`, `pnpm test:fgaa:browser`. Browser tests use an isolated headless Edge profile on Windows, Chromium on other platforms. They never reuse the user's browser profile. Install Playwright's Chromium browser if testing on another platform.
@@ -17,6 +18,6 @@ The host's `tools/verify-mxu-planner.mjs` compares 202 editor command cases and 
 
 The branch does not yet implement FGA execution through Tauri or Android. The FGAA host repository still contains the working JVM parser/preferences bridge and the original Flutter integration baseline.
 
-The settings browser test exports `test-results/fgaa-settings.fga`. From the host root, run `node tools/verify-mxu-preferences.mjs` with `JAVA_HOME` configured to validate this actual UI export through the FGA `IBattleConfig` adapter.
+The settings browser test exports `test-results/fgaa-settings.fga`. From the host root, run `node tools/verify-mxu-preferences.mjs` with `JAVA_HOME` configured to validate this actual UI export, including the selected material enum, through the FGA `IBattleConfig` adapter. Six browser tests now pass, including unknown material preservation.
 
 Upstream updates should be merged into this integration branch and tested before updating the host's pinned commit. Keep application-specific changes within `src/fgaa` and the few documented entry points wherever possible.

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FgaConfig } from './battleLibrary';
+import { MaterialPicker } from './MaterialPicker';
 
 const control =
   'w-full rounded-md border border-border bg-bg-secondary p-2 text-sm text-text-primary';
@@ -119,6 +120,10 @@ export function BattleSettings({
             'Kr',
           ])}
           {toggle('auto_choose_target')}
+          <MaterialPicker
+            selected={(data.battle_config_mat ?? []) as string[]}
+            onChanged={(values) => onChanged({ battle_config_mat: values })}
+          />
           {toggle('add_raid_delay')}
           {choice(
             'raid_delay_seconds',

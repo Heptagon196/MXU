@@ -1,0 +1,390 @@
+{
+  "Proof": {
+    "en": "Proof of Hero",
+    "zh": "英雄之证"
+  },
+  "Bone": {
+    "en": "Evil Bone",
+    "zh": "凶骨"
+  },
+  "Fang": {
+    "en": "Dragon's Fang",
+    "zh": "龙之牙"
+  },
+  "Dust": {
+    "en": "Void's Dust",
+    "zh": "虚影之尘"
+  },
+  "Chain": {
+    "en": "Fool's Chain",
+    "zh": "愚者之锁"
+  },
+  "Stinger": {
+    "en": "Deadly Poisonous Needle",
+    "zh": "万死的毒针"
+  },
+  "Fluid": {
+    "en": "Mystic Spinal Fluid",
+    "zh": "魔术髓液"
+  },
+  "Stake": {
+    "en": "Stake of Wailing Night",
+    "zh": "宵泣之铁桩"
+  },
+  "Gunpowder": {
+    "en": "Mystic Gunpowder",
+    "zh": "震荡火药"
+  },
+  "AmnestyBell": {
+    "en": "Tiny Bell of Amnesty",
+    "zh": "赦免的小钟"
+  },
+  "CeremonialBlade": {
+    "en": "Twilight Ceremonial Blade",
+    "zh": "黄昏的仪式剑"
+  },
+  "UnforgettableAshes": {
+    "en": "Unforgettable Ashes",
+    "zh": "不忘之灰"
+  },
+  "ObsidianEdge": {
+    "en": "Obsidian Edge",
+    "zh": "黑曜锐刃"
+  },
+  "VestigeOfMadness": {
+    "en": "Vestige of Madness",
+    "zh": "疯狂的残渣"
+  },
+  "Seed": {
+    "en": "Seed of Yggdrasil",
+    "zh": "世界树之种"
+  },
+  "GhostLantern": {
+    "en": "Ghost Lantern",
+    "zh": "鬼魂提灯"
+  },
+  "OctupletCrystal": {
+    "en": "Octuplet Crystal",
+    "zh": "八连双晶"
+  },
+  "SerpentJewel": {
+    "en": "Serpent Jewel",
+    "zh": "蛇之宝玉"
+  },
+  "Feather": {
+    "en": "Phoenix Feather",
+    "zh": "凤凰羽毛"
+  },
+  "Gear": {
+    "en": "Eternal Gear",
+    "zh": "无间齿轮"
+  },
+  "Page": {
+    "en": "Forbidden Page",
+    "zh": "禁断书页"
+  },
+  "HomunculusBaby": {
+    "en": "Homunculus Baby",
+    "zh": "人工生命体幼体"
+  },
+  "Horseshoe": {
+    "en": "Meteor Horseshoe",
+    "zh": "陨蹄铁"
+  },
+  "Medal": {
+    "en": "Knight's Medal",
+    "zh": "大骑士勋章"
+  },
+  "ShellOfReminiscence": {
+    "en": "Shell of Reminiscence",
+    "zh": "追忆的贝壳"
+  },
+  "Magatama": {
+    "en": "Refined Magatama",
+    "zh": "枯淡勾玉"
+  },
+  "EternalIce": {
+    "en": "Eternal Ice",
+    "zh": "永远结冰"
+  },
+  "GiantRing": {
+    "en": "Giant's Ring",
+    "zh": "巨人的戒指"
+  },
+  "AuroraSteel": {
+    "en": "Aurora Steel",
+    "zh": "极光之钢"
+  },
+  "SoundlessBell": {
+    "en": "Soundless Bell",
+    "zh": "闲古铃"
+  },
+  "Arrowhead": {
+    "en": "Arrowhead of Malice",
+    "zh": "祸罪之箭头"
+  },
+  "Tiara": {
+    "en": "Moonlit Tiara",
+    "zh": "光银之冠"
+  },
+  "DivineSpiritParticle": {
+    "en": "Divine Spirit Particle",
+    "zh": "神脉灵子"
+  },
+  "RainbowThreadBall": {
+    "en": "Rainbow Thread Ball",
+    "zh": "虹之线球"
+  },
+  "FantasyScales": {
+    "en": "Scales of Fantasies",
+    "zh": "梦幻的鳞粉"
+  },
+  "Sunscale": {
+    "en": "Sunscale",
+    "zh": "太阳皮"
+  },
+  "Converger": {
+    "en": "Ether Proton Converger",
+    "zh": "以太收光体"
+  },
+  "FlowerOfTheEnd": {
+    "en": "Flower of the End",
+    "zh": "终之花"
+  },
+  "UniversalCube": {
+    "en": "Universal Cube",
+    "zh": "宇宙立方体"
+  },
+  "DivineLens": {
+    "en": "Divine Lens",
+    "zh": "神彩透镜（暂译）"
+  },
+  "Claw": {
+    "en": "Claw of Chaos",
+    "zh": "混沌之爪"
+  },
+  "Heart": {
+    "en": "Heart of the Foreign God",
+    "zh": "蛮神心脏"
+  },
+  "DragonScale": {
+    "en": "Reverse Dragon Scale",
+    "zh": "龙之逆麟"
+  },
+  "SpiritRoot": {
+    "en": "Spirit Root",
+    "zh": "精灵根"
+  },
+  "YoungHorn": {
+    "en": "Warhorse's Young Horn",
+    "zh": "战马的幼角"
+  },
+  "TearStone": {
+    "en": "Tearstone of Blood",
+    "zh": "血之泪石"
+  },
+  "Grease": {
+    "en": "Black Beast Grease",
+    "zh": "黑兽脂"
+  },
+  "LampOfEvilSealing": {
+    "en": "Lamp of Evil Sealing",
+    "zh": "封魔之灯"
+  },
+  "Scarab": {
+    "en": "Scarab of Wisdom",
+    "zh": "智慧之圣甲虫像"
+  },
+  "Lanugo": {
+    "en": "Primordial Lanugo",
+    "zh": "起源的胎毛"
+  },
+  "Gallstone": {
+    "en": "Cursed Beast Gallstone",
+    "zh": "咒兽胆石"
+  },
+  "MysteriousWine": {
+    "en": "Mysterious Divine Wine",
+    "zh": "奇奇神酒"
+  },
+  "ReactorCore": {
+    "en": "Reactor Core of Dawn",
+    "zh": "晓光炉心"
+  },
+  "TsukumoMirror": {
+    "en": "Tsukumo Mirror",
+    "zh": "九十九镜"
+  },
+  "EggOfTruth": {
+    "en": "Egg of Truth",
+    "zh": "真理之卵"
+  },
+  "StarShard": {
+    "en": "Glittering Star Shard",
+    "zh": "煌星碎片"
+  },
+  "FruitOfEternity": {
+    "en": "Fruit of Eternity",
+    "zh": "悠久果实"
+  },
+  "DemonFlameLantern": {
+    "en": "Demon Flame Lantern",
+    "zh": "鬼炎鬼灯"
+  },
+  "GoldenCauldron": {
+    "en": "Golden Cauldron",
+    "zh": "黄金釜"
+  },
+  "MoonlightNucleus": {
+    "en": "Moonlight Nucleus",
+    "zh": "月光核"
+  },
+  "HolyWaterOfDestiny": {
+    "en": "Holy Water of Destiny",
+    "zh": "天命圣水（暂译）"
+  },
+  "ReliquaryOfDepartedSoul": {
+    "en": "Reliquary of Departed Soul",
+    "zh": "Reliquary of Departed Soul"
+  },
+  "MonumentSaber": {
+    "en": "Saber Monument",
+    "zh": "剑阶金像"
+  },
+  "MonumentArcher": {
+    "en": "Archer Monument",
+    "zh": "弓阶金像"
+  },
+  "MonumentLancer": {
+    "en": "Lancer Monument",
+    "zh": "枪阶金像"
+  },
+  "MonumentRider": {
+    "en": "Rider Monument",
+    "zh": "骑阶金像"
+  },
+  "MonumentCaster": {
+    "en": "Caster Monument",
+    "zh": "术阶金像"
+  },
+  "MonumentAssassin": {
+    "en": "Assassin Monument",
+    "zh": "杀阶金像"
+  },
+  "MonumentBerserker": {
+    "en": "Berserker Monument",
+    "zh": "狂阶金像"
+  },
+  "PieceSaber": {
+    "en": "Saber Piece",
+    "zh": "剑阶银棋"
+  },
+  "PieceArcher": {
+    "en": "Archer Piece",
+    "zh": "弓阶银棋"
+  },
+  "PieceLancer": {
+    "en": "Lancer Piece",
+    "zh": "枪阶银棋"
+  },
+  "PieceRider": {
+    "en": "Rider Piece",
+    "zh": "骑阶银棋"
+  },
+  "PieceCaster": {
+    "en": "Caster Piece",
+    "zh": "术阶银棋"
+  },
+  "PieceAssassin": {
+    "en": "Assassin Piece",
+    "zh": "杀阶银棋"
+  },
+  "PieceBerserker": {
+    "en": "Berserker Piece",
+    "zh": "狂阶银棋"
+  },
+  "SkillGoldSaber": {
+    "en": "Secret Gem of Saber",
+    "zh": "剑之秘石"
+  },
+  "SkillGoldArcher": {
+    "en": "Secret Gem of Archer",
+    "zh": "弓之秘石"
+  },
+  "SkillGoldLancer": {
+    "en": "Secret Gem of Lancer",
+    "zh": "枪之秘石"
+  },
+  "SkillGoldRider": {
+    "en": "Secret Gem of Rider",
+    "zh": "骑之秘石"
+  },
+  "SkillGoldCaster": {
+    "en": "Secret Gem of Caster",
+    "zh": "术之秘石"
+  },
+  "SkillGoldAssassin": {
+    "en": "Secret Gem of Assassin",
+    "zh": "杀之秘石"
+  },
+  "SkillGoldBerserker": {
+    "en": "Secret Gem of Berserker",
+    "zh": "狂之秘石"
+  },
+  "SkillRedSaber": {
+    "en": "Magic Gem of Saber",
+    "zh": "剑之魔石"
+  },
+  "SkillRedArcher": {
+    "en": "Magic Gem of Archer",
+    "zh": "弓之魔石"
+  },
+  "SkillRedLancer": {
+    "en": "Magic Gem of Lancer",
+    "zh": "枪之魔石"
+  },
+  "SkillRedRider": {
+    "en": "Magic Gem of Rider",
+    "zh": "骑之魔石"
+  },
+  "SkillRedCaster": {
+    "en": "Magic Gem of Caster",
+    "zh": "术之魔石"
+  },
+  "SkillRedAssassin": {
+    "en": "Magic Gem of Assassin",
+    "zh": "杀之魔石"
+  },
+  "SkillRedBerserker": {
+    "en": "Magic Gem of Berserker",
+    "zh": "狂之魔石"
+  },
+  "SkillBlueSaber": {
+    "en": "Gem of Saber",
+    "zh": "剑之辉石"
+  },
+  "SkillBlueArcher": {
+    "en": "Gem of Archer",
+    "zh": "弓之辉石"
+  },
+  "SkillBlueLancer": {
+    "en": "Gem of Lancer",
+    "zh": "枪之辉石"
+  },
+  "SkillBlueRider": {
+    "en": "Gem of Rider",
+    "zh": "骑之辉石"
+  },
+  "SkillBlueCaster": {
+    "en": "Gem of Caster",
+    "zh": "术之辉石"
+  },
+  "SkillBlueAssassin": {
+    "en": "Gem of Assassin",
+    "zh": "杀之辉石"
+  },
+  "SkillBlueBerserker": {
+    "en": "Gem of Berserker",
+    "zh": "狂之辉石"
+  }
+}
