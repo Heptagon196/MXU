@@ -8,6 +8,24 @@ use std::{
 static STORAGE_LOCK: Mutex<()> = Mutex::new(());
 const MAX_SIZE: usize = 32 * 1024 * 1024;
 
+fn storage_root() -> Result<PathBuf, String> {
+    // Commands may arrive before setup has published the mobile directories.
+    // Run only on the blocking pool: never call the Android path plugin here.
+    #[cfg(mobile)]
+    {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            match crate::commands::utils::get_app_data_dir() {
+                Ok(root) => return Ok(root),
+                Err(error) if std::time::Instant::now() >= deadline => return Err(error),
+                Err(_) => std::thread::sleep(std::time::Duration::from_millis(25)),
+            }
+        }
+    }
+    #[cfg(desktop)]
+    crate::commands::utils::get_app_data_dir()
+}
+
 fn path(root: &Path, key: &str) -> Result<PathBuf, String> {
     let name = match key {
         "library" => "battle-library.json",
@@ -65,24 +83,29 @@ fn save(root: &Path, key: &str, expected: Option<&str>, value: &str) -> Result<(
 }
 
 #[tauri::command]
-pub fn fgaa_read_document(key: String) -> Result<Option<String>, String> {
-    let _guard = STORAGE_LOCK.lock().map_err(|e| e.to_string())?;
-    read(&path(&crate::commands::utils::get_app_data_dir()?, &key)?)
+pub async fn fgaa_read_document(key: String) -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = storage_root()?;
+        let _guard = STORAGE_LOCK.lock().map_err(|e| e.to_string())?;
+        read(&path(&root, &key)?)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
-pub fn fgaa_save_document(
+pub async fn fgaa_save_document(
     key: String,
     expected: Option<String>,
     value: String,
 ) -> Result<(), String> {
-    let _guard = STORAGE_LOCK.lock().map_err(|e| e.to_string())?;
-    save(
-        &crate::commands::utils::get_app_data_dir()?,
-        &key,
-        expected.as_deref(),
-        &value,
-    )
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = storage_root()?;
+        let _guard = STORAGE_LOCK.lock().map_err(|e| e.to_string())?;
+        save(&root, &key, expected.as_deref(), &value)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[cfg(test)]

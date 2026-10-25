@@ -27,7 +27,8 @@ pub async fn fgaa_enter_skill_display(app: tauri::AppHandle) -> Result<Option<u3
         let lease: Lease = app
             .state::<DisplayPlugin>()
             .0
-            .run_mobile_plugin("enter", serde_json::json!({}))
+            .run_mobile_plugin_async("enter", serde_json::json!({}))
+            .await
             .map_err(|error| error.to_string())?;
         Ok(Some(lease.token))
     }
@@ -44,7 +45,8 @@ pub async fn fgaa_leave_skill_display(app: tauri::AppHandle, token: u32) -> Resu
     {
         app.state::<DisplayPlugin>()
             .0
-            .run_mobile_plugin("leave", serde_json::json!({ "token": token }))
+            .run_mobile_plugin_async("leave", serde_json::json!({ "token": token }))
+            .await
             .map_err(|error| error.to_string())
     }
     #[cfg(not(target_os = "android"))]

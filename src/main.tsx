@@ -1,17 +1,24 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Provider as TooltipProvider } from '@radix-ui/react-tooltip';
-import App from './App';
-import { ProductShell } from './fgaa/ProductShell';
-import './i18n';
+import { invoke } from '@tauri-apps/api/core';
+import { waitForNativeHost } from './fgaa/nativeStartup';
 import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <TooltipProvider delayDuration={300}>
-      <ProductShell>
-        <App settingsInProductShell />
-      </ProductShell>
-    </TooltipProvider>
-  </React.StrictMode>,
-);
+async function start() {
+  const root = document.getElementById('root')!;
+  try {
+    if ('__FGAA_ANDROID__' in window) {
+      root.textContent = '正在启动 FGAA…';
+      await waitForNativeHost(() => invoke<string>('get_data_dir'));
+    }
+    // Import stores and logging only after mobile paths and IPC are ready.
+    await import('./mountApp');
+  } catch (error) {
+    root.replaceChildren();
+    const message = document.createElement('p');
+    message.textContent = error instanceof Error ? error.message : String(error);
+    const retry = document.createElement('button');
+    retry.textContent = '重新启动';
+    retry.onclick = () => location.reload();
+    root.append(message, retry);
+  }
+}
+void start();

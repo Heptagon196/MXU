@@ -1,4 +1,6 @@
 pub mod commands;
+#[cfg(any(target_os = "android", test))]
+mod fgaa_bundle;
 mod fgaa_display;
 mod fgaa_output;
 mod fgaa_queue;

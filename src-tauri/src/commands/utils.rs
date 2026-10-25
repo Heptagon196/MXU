@@ -10,11 +10,20 @@ use tauri::{AppHandle, Emitter, Manager};
 
 #[cfg(mobile)]
 static MOBILE_DATA_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+#[cfg(mobile)]
+static MOBILE_RESOURCE_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
 #[cfg(mobile)]
 pub fn init_mobile_paths(app: &AppHandle) -> Result<(), String> {
     let path = app.path().app_data_dir().map_err(|error| error.to_string())?;
     std::fs::create_dir_all(&path).map_err(|error| error.to_string())?;
+    #[cfg(target_os = "android")]
+    let resources = crate::fgaa_bundle::install_embedded(&path)?;
+    #[cfg(not(target_os = "android"))]
+    let resources = path.clone();
+    MOBILE_RESOURCE_DIR
+        .set(resources)
+        .map_err(|_| "Mobile resources already initialized".to_string())?;
     MOBILE_DATA_DIR
         .set(path)
         .map_err(|_| "Mobile paths already initialized".to_string())
@@ -247,6 +256,10 @@ pub fn emit_config_changed(app: &AppHandle) {
 /// - macOS: ~/Library/Application Support/MXU/
 /// - Windows/Linux: exe 所在目录（保持便携式部署）
 pub fn get_app_data_dir() -> Result<PathBuf, String> {
+    #[cfg(mobile)]
+    {
+        MOBILE_DATA_DIR.get().cloned().ok_or_else(|| "Mobile paths not initialized".into())
+    }
     #[cfg(target_os = "macos")]
     {
         let home = std::env::var("HOME").map_err(|_| "无法获取 HOME 环境变量".to_string())?;
@@ -257,7 +270,7 @@ pub fn get_app_data_dir() -> Result<PathBuf, String> {
         Ok(path)
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(all(desktop, not(target_os = "macos")))]
     {
         // Windows/Linux 保持便携式，使用 exe 所在目录
         get_exe_directory()
@@ -312,7 +325,7 @@ pub fn get_exe_directory() -> Result<PathBuf, String> {
     #[cfg(mobile)]
     {
         // Android current_exe points at app_process, not a writable app folder.
-        MOBILE_DATA_DIR
+        MOBILE_RESOURCE_DIR
             .get()
             .cloned()
             .ok_or_else(|| "Mobile paths not initialized".into())
