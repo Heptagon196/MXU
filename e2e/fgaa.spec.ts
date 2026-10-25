@@ -89,6 +89,34 @@ test('skill board preserves repeated targets, NP order and undo across tabs', as
   await expect(command).toHaveText('a(11)t264n1,#,');
 });
 
+test('target dialog stays usable in a short viewport and restores keyboard focus', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 640, height: 360 });
+  await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
+  await page.goto('/');
+  await page.getByRole('tab', { name: '战斗配置', exact: true }).click();
+  await page.getByRole('button', { name: '新建配置', exact: true }).click();
+  const skill = page.getByRole('button', { name: '从者 1 技能 1', exact: true });
+  const initialCommand = await page.locator('main pre').innerText();
+  await skill.click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('checkbox').press('Space');
+  await expect(dialog.getByRole('checkbox')).toBeChecked();
+  for (let index = 0; index < 20; index++)
+    await dialog.getByRole('button', { name: '从者 1', exact: true }).click();
+  const apply = dialog.getByRole('button', { name: '添加', exact: true });
+  await expect(apply).toBeInViewport();
+  await apply.focus();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('checkbox')).toBeFocused();
+  await page.screenshot({ path: 'test-results/fgaa-target-short.png' });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(skill).toBeFocused();
+  await expect(page.locator('main pre')).toHaveText(initialCommand);
+});
+
 test('invalid merged attacks leave the original configuration editable', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('mxu-language', 'zh-CN'));
   await page.goto('/');

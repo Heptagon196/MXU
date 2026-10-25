@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SwitchInput } from '@/components/FormControls';
+import { SettingsGroup } from '@/components/ui/SettingsGroup';
 import { chaldeaGroups, requestChaldeaSettings, type ChaldeaSettings } from './chaldeaSettings';
 
 export function ChaldeaSettingsPage({ active }: { active: boolean }) {
@@ -59,12 +60,11 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
           }}
         >
           {Object.entries(chaldeaGroups).map(([group, keys]) => (
-            <fieldset
+            <SettingsGroup
               key={group}
+              title={t(`chaldeaSettings.${group}`)}
               disabled={status === 'saving' || status === 'loading'}
-              className="rounded-xl border border-border bg-bg-secondary p-4"
             >
-              <legend className="px-2 font-medium">{t(`chaldeaSettings.${group}`)}</legend>
               <p className="mb-4 text-sm text-text-secondary">
                 {t(`chaldeaSettings.${group}Detail`)}
               </p>
@@ -85,7 +85,7 @@ export function ChaldeaSettingsPage({ active }: { active: boolean }) {
                   </label>
                 ))}
               </div>
-            </fieldset>
+            </SettingsGroup>
           ))}
           <button
             disabled={status === 'saving' || status === 'loading'}

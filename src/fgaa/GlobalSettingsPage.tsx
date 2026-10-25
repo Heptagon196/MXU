@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFgaaSettingsStore } from '@/stores/fgaaSettingsStore';
 import { SwitchInput, formInputClass } from '@/components/FormControls';
+import { SettingsGroup } from '@/components/ui/SettingsGroup';
 import { bounds, globalKeys, globalGroups, validateGlobals } from './globalSettings';
 export function GlobalSettingsPage() {
   const { t } = useTranslation('fgaa');
@@ -53,8 +54,7 @@ export function GlobalSettingsPage() {
           className="space-y-4"
         >
           {Object.entries(globalGroups).map(([group, keys]) => (
-            <fieldset key={group} className="rounded-xl border border-border bg-bg-secondary p-4">
-              <legend className="px-2 font-medium">{t(`globals.groups.${group}`)}</legend>
+            <SettingsGroup key={group} title={t(`globals.groups.${group}`)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 {keys.map((key) => (
                   <label
@@ -79,7 +79,7 @@ export function GlobalSettingsPage() {
                   </label>
                 ))}
               </div>
-            </fieldset>
+            </SettingsGroup>
           ))}
           <button
             className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"

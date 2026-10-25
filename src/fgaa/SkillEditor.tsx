@@ -39,54 +39,63 @@ function TargetDialog({
     );
   return (
     <ModalPortal>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose();
+        }}
+      >
         <div
           ref={ref}
           role="dialog"
           aria-modal="true"
           aria-labelledby="fgaa-target-title"
-          className="w-full max-w-md rounded-xl border border-border bg-bg-primary p-5 shadow-xl"
+          className="w-full max-w-md max-h-[85dvh] rounded-xl border border-border bg-bg-secondary shadow-2xl overflow-hidden flex flex-col"
         >
-          <h2 id="fgaa-target-title" className="mb-4 font-semibold">
-            {t('skill.targetTitle', { skill: choice.skill })}
-          </h2>
-          {choice.type === 'servantSkill' && (
-            <label className="mb-3 flex items-center gap-2 text-sm">
-              <CheckboxInput
-                checked={multiple}
-                onChange={(e) => {
-                  setMultiple(e.target.checked);
-                  setTargets([]);
-                }}
-              />
-              {t('skill.multiTarget')}
-            </label>
-          )}
-          <div className="grid grid-cols-3 gap-2">
-            {servantTargets.map((target) => (
-              <button
-                key={target}
-                className={button}
-                onClick={() => (multiple ? setTargets([...targets, target]) : apply([target]))}
-              >
-                {t(`skill.targets.${target}`)}
-              </button>
-            ))}
+          <div className="px-5 py-4 border-b border-border shrink-0">
+            <h2 id="fgaa-target-title" className="text-sm font-semibold text-text-primary">
+              {t('skill.targetTitle', { skill: choice.skill })}
+            </h2>
           </div>
-          {multiple && (
-            <div className="my-3 flex flex-wrap gap-1">
-              {targets.map((target, i) => (
+          <div className="px-5 py-4 overflow-auto flex-1 min-h-0">
+            {choice.type === 'servantSkill' && (
+              <label className="mb-3 flex items-center gap-2 text-sm">
+                <CheckboxInput
+                  checked={multiple}
+                  onChange={(e) => {
+                    setMultiple(e.target.checked);
+                    setTargets([]);
+                  }}
+                />
+                {t('skill.multiTarget')}
+              </label>
+            )}
+            <div className="grid grid-cols-3 gap-2">
+              {servantTargets.map((target) => (
                 <button
-                  key={i}
+                  key={target}
                   className={button}
-                  onClick={() => setTargets(targets.filter((_, index) => index !== i))}
+                  onClick={() => (multiple ? setTargets([...targets, target]) : apply([target]))}
                 >
-                  {i + 1}. {t(`skill.targets.${target}`)} ×
+                  {t(`skill.targets.${target}`)}
                 </button>
               ))}
             </div>
-          )}
-          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            {multiple && (
+              <div className="my-3 flex flex-wrap gap-1">
+                {targets.map((target, i) => (
+                  <button
+                    key={i}
+                    className={button}
+                    onClick={() => setTargets(targets.filter((_, index) => index !== i))}
+                  >
+                    {i + 1}. {t(`skill.targets.${target}`)} ×
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="px-5 py-4 flex flex-wrap justify-end gap-2 bg-bg-tertiary/30 shrink-0">
             <button className={button} onClick={() => apply([])}>
               {t('skill.noTarget')}
             </button>
@@ -94,7 +103,10 @@ function TargetDialog({
               {t('skill.cancel')}
             </button>
             {multiple && (
-              <button className={`${button} bg-accent text-white`} onClick={() => apply(targets)}>
+              <button
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-accent hover:bg-accent-hover transition-colors shadow-sm"
+                onClick={() => apply(targets)}
+              >
                 {t('skill.apply')}
               </button>
             )}
