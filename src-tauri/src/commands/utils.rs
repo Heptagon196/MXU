@@ -8,6 +8,18 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager};
 
+#[cfg(mobile)]
+static MOBILE_DATA_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+
+#[cfg(mobile)]
+pub fn init_mobile_paths(app: &AppHandle) -> Result<(), String> {
+    let path = app.path().app_data_dir().map_err(|error| error.to_string())?;
+    std::fs::create_dir_all(&path).map_err(|error| error.to_string())?;
+    MOBILE_DATA_DIR
+        .set(path)
+        .map_err(|_| "Mobile paths already initialized".to_string())
+}
+
 /// 发送回调事件到前端（Tauri WebView + WebSocket 浏览器客户端）
 pub fn emit_callback_event<S: Into<String>>(app: &AppHandle, message: S, details: S) {
     let message = message.into();
@@ -297,11 +309,22 @@ pub fn get_logs_dir() -> PathBuf {
 
 /// 获取 exe 所在目录路径（内部使用）
 pub fn get_exe_directory() -> Result<PathBuf, String> {
-    let exe_path = std::env::current_exe().map_err(|e| format!("获取 exe 路径失败: {}", e))?;
-    exe_path
-        .parent()
-        .map(|p| p.to_path_buf())
-        .ok_or_else(|| "无法获取 exe 所在目录".to_string())
+    #[cfg(mobile)]
+    {
+        // Android current_exe points at app_process, not a writable app folder.
+        MOBILE_DATA_DIR
+            .get()
+            .cloned()
+            .ok_or_else(|| "Mobile paths not initialized".into())
+    }
+    #[cfg(desktop)]
+    {
+        let exe_path = std::env::current_exe().map_err(|e| format!("获取 exe 路径失败: {}", e))?;
+        exe_path
+            .parent()
+            .map(|p| p.to_path_buf())
+            .ok_or_else(|| "无法获取 exe 所在目录".to_string())
+    }
 }
 
 /// 获取可执行文件所在目录下的 maafw 子目录

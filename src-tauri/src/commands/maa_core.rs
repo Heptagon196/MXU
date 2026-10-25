@@ -412,7 +412,7 @@ pub fn maa_init(state: State<Arc<MaaState>>, lib_dir: Option<String>) -> Result<
         let name = "MaaFramework.dll";
         #[cfg(target_os = "macos")]
         let name = "libMaaFramework.dylib";
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         let name = "libMaaFramework.so";
         lib_path.join(name)
     };
@@ -481,7 +481,7 @@ pub fn maa_check_version(state: State<Arc<MaaState>>) -> Result<VersionCheckResu
         let dll_path = dir.join("MaaFramework.dll");
         #[cfg(target_os = "macos")]
         let dll_path = dir.join("libMaaFramework.dylib");
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         let dll_path = dir.join("libMaaFramework.so");
 
         if let Err(e) = maa_framework::load_library(&dll_path) {

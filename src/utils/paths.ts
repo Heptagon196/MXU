@@ -13,6 +13,9 @@ export const isTauri = () => {
   return typeof window !== 'undefined' && '__TAURI__' in window;
 };
 
+/** Set synchronously by the Android host before application scripts run. */
+export const isDesktopTauri = () => isTauri() && !('__FGAA_ANDROID__' in window);
+
 // 缓存数据目录路径
 let cachedDataPath: string | null = null;
 

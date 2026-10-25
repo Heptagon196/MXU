@@ -18,7 +18,7 @@ import {
 import { useAppStore } from '@/stores/appStore';
 import { isTelemetryBlockedByBuild } from '@/services/telemetryService';
 import { defaultAddTaskPanelHeight, defaultWindowSize } from '@/types/config';
-import { isTauri } from '@/utils/paths';
+import { isDesktopTauri } from '@/utils/paths';
 import { SwitchButton } from '@/components/FormControls';
 import { DesktopOnlyWrapper } from '@/components/ui/DesktopOnlyWrapper';
 import { FrameRateSelector } from '../FrameRateSelector';
@@ -61,7 +61,7 @@ export function GeneralSection() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isTauri()) return;
+    if (!isDesktopTauri()) return;
     import('@tauri-apps/api/core').then(({ invoke: tauriInvoke }) => {
       tauriInvoke<string>('get_os')
         .then((os) => {
@@ -95,7 +95,7 @@ export function GeneralSection() {
   }, [instanceDropdownOpen]);
 
   const handleAutoStartToggle = useCallback(async (enabled: boolean) => {
-    if (!isTauri()) return;
+    if (!isDesktopTauri()) return;
     setAutoStartLoading(true);
     try {
       if (isWindowsRef.current) {
@@ -120,7 +120,7 @@ export function GeneralSection() {
   }, []);
 
   const handleResetWindowLayout = useCallback(async () => {
-    if (!isTauri()) return;
+    if (!isDesktopTauri()) return;
 
     try {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
@@ -160,7 +160,7 @@ export function GeneralSection() {
       <DesktopOnlyWrapper>
         <div className="bg-bg-secondary rounded-xl p-4 border border-border space-y-4">
           {/* ① 开机自启动 */}
-          {isTauri() && (
+          {isDesktopTauri() && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Power className="w-5 h-5 text-accent" />
@@ -178,7 +178,7 @@ export function GeneralSection() {
           )}
 
           {/* ② 启动后自动执行 */}
-          <div className={isTauri() ? 'pt-4 border-t border-border' : ''}>
+          <div className={isDesktopTauri() ? 'pt-4 border-t border-border' : ''}>
             <div className="flex items-center gap-3 mb-3">
               <Play className="w-5 h-5 text-accent" />
               <div>
@@ -381,7 +381,7 @@ export function GeneralSection() {
       </div>
 
       {/* ⑨ 重置窗口布局 */}
-      {isTauri() && (
+      {isDesktopTauri() && (
         <div className="bg-bg-secondary rounded-xl p-4 border border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

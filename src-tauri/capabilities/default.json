@@ -80,12 +80,6 @@
       "allow": [{ "url": "https://**" }, { "url": "http://**" }]
     },
     "process:allow-restart",
-    "process:allow-exit",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister",
-    "global-shortcut:allow-unregister-all",
-    "autostart:allow-enable",
-    "autostart:allow-disable",
-    "autostart:allow-is-enabled"
+    "process:allow-exit"
   ]
 }

@@ -386,7 +386,7 @@ pub fn check_process_running(program: &str) -> bool {
         false
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     {
         // 遍历 /proc/<pid>/exe 读取真实可执行路径进行比较
         if let Ok(proc_dir) = std::fs::read_dir("/proc") {
@@ -780,7 +780,7 @@ pub async fn retry_load_maa_library() -> Result<String, String> {
     let dll_path = maafw_dir.join("MaaFramework.dll");
     #[cfg(target_os = "macos")]
     let dll_path = maafw_dir.join("libMaaFramework.dylib");
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     let dll_path = maafw_dir.join("libMaaFramework.so");
 
     maa_framework::load_library(&dll_path).map_err(|e| e.to_string())?;

@@ -1,9 +1,11 @@
 pub mod commands;
+mod fgaa_display;
 mod fgaa_output;
 mod fgaa_queue;
 mod fgaa_storage;
 mod mxu_actions;
 pub mod screenshot_service;
+#[cfg(desktop)]
 mod tray;
 mod web_server;
 pub mod ws_broadcast;
@@ -17,9 +19,11 @@ use ws_broadcast::WsBroadcast;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // 日志目录：exe 目录/debug/logs（与前端日志同目录）
+    #[cfg(desktop)]
     let logs_dir = commands::utils::get_logs_dir();
 
     // 确保日志目录存在
+    #[cfg(desktop)]
     let _ = std::fs::create_dir_all(&logs_dir);
 
     // 自动迁移旧版注册表自启动到任务计划程序
@@ -27,17 +31,23 @@ pub fn run() {
     #[cfg(windows)]
     commands::system::migrate_legacy_autostart();
 
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(fgaa_display::init());
+    #[cfg(desktop)]
+    let builder = builder
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--autostart".into()]),
+        ));
+
+    let app = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec!["--autostart".into()]),
-        ))
         .plugin(
             tauri_plugin_log::Builder::new()
                 // 默认约 40KB + KeepOne 会整文件删除，不便排查；改为单文件更大且保留多份轮转档
@@ -45,8 +55,13 @@ pub fn run() {
                 .rotation_strategy(RotationStrategy::KeepSome(8))
                 .targets({
                     #[allow(unused_mut)]
+                    #[cfg(desktop)]
                     let mut targets = vec![Target::new(TargetKind::Folder {
                         path: logs_dir,
+                        file_name: Some("mxu-tauri".into()),
+                    })];
+                    #[cfg(mobile)]
+                    let mut targets = vec![Target::new(TargetKind::LogDir {
                         file_name: Some("mxu-tauri".into()),
                     })];
                     // debug 构建额外输出到标准流便于开发调试
@@ -59,6 +74,8 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
+            #[cfg(mobile)]
+            commands::utils::init_mobile_paths(app.handle())?;
             // Tauri 可能在 WebView 创建失败后仍注册逻辑窗口并执行 setup。
             // 此时 HWND 不可用，必须先退出，避免留下托盘和后台服务。
             #[cfg(windows)]
@@ -197,7 +214,7 @@ pub fn run() {
                     let dll_path = maafw_dir.join("MaaFramework.dll");
                     #[cfg(target_os = "macos")]
                     let dll_path = maafw_dir.join("libMaaFramework.dylib");
-                    #[cfg(target_os = "linux")]
+                    #[cfg(any(target_os = "linux", target_os = "android"))]
                     let dll_path = maafw_dir.join("libMaaFramework.so");
 
                     match maa_framework::load_library(&dll_path) {
@@ -228,6 +245,7 @@ pub fn run() {
             app.manage(maa_state);
 
             // 初始化系统托盘
+            #[cfg(desktop)]
             if let Err(e) = tray::init_tray(app.handle()) {
                 log::error!("Failed to initialize system tray: {}", e);
             }
@@ -235,6 +253,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            fgaa_display::fgaa_enter_skill_display,
+            fgaa_display::fgaa_leave_skill_display,
             fgaa_storage::fgaa_read_document,
             fgaa_storage::fgaa_save_document,
             // Maa 核心命令
@@ -345,6 +365,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             match event {
                 // 窗口关闭请求：检查是否最小化到托盘
+                #[cfg(desktop)]
                 tauri::WindowEvent::CloseRequested { api, .. } => {
                     if tray::handle_close_requested(window.app_handle()) {
                         api.prevent_close();

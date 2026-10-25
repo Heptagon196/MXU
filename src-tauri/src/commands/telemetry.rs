@@ -38,6 +38,7 @@ static TELEMETRY_GUARD: Mutex<Option<sentry::ClientInitGuard>> = Mutex::new(None
 /// 最近一次初始化配置，供运行时重新开启使用。
 static TELEMETRY_CONFIG: Mutex<Option<TelemetryInitConfig>> = Mutex::new(None);
 /// 匿名机器 ID（计算一次后复用，同时作为 Sentry user.id）。
+#[cfg(desktop)]
 static MACHINE_ID: OnceLock<String> = OnceLock::new();
 /// 进行中的运行遥测状态，按 instance_id 索引。
 static RUNS: Mutex<BTreeMap<String, RunState>> = Mutex::new(BTreeMap::new());
@@ -622,6 +623,7 @@ fn configure_scope(config: &TelemetryInitConfig) {
     let hw = collect_hardware();
 
     sentry::configure_scope(|scope| {
+        #[cfg(desktop)]
         scope.set_user(Some(sentry::User {
             id: Some(machine_id().to_string()),
             ..Default::default()
@@ -643,10 +645,20 @@ fn configure_scope(config: &TelemetryInitConfig) {
 
 /// 匿名机器 ID，首次调用时计算并缓存。
 fn machine_id() -> &'static str {
-    MACHINE_ID.get_or_init(hashed_machine_id)
+    #[cfg(desktop)]
+    {
+        MACHINE_ID.get_or_init(hashed_machine_id)
+    }
+    // Mobile has no machine-uid provider; do not assign all devices a shared
+    // telemetry user ID. This label is only used by the local initialization log.
+    #[cfg(mobile)]
+    {
+        "unavailable"
+    }
 }
 
 /// 计算稳定的匿名机器 ID：machine-uid 原值加盐后 sha256，物理机固定、重启不变。
+#[cfg(desktop)]
 fn hashed_machine_id() -> String {
     let raw = machine_uid::get().unwrap_or_else(|_| "unknown-machine".to_string());
     let mut hasher = Sha256::new();

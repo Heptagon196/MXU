@@ -17,6 +17,7 @@ import {
 } from '@/components';
 import { BackgroundOverlay } from '@/components/BackgroundOverlay';
 import { isAllowedSettingsHotkey } from '@/components/FormControls';
+import { isDesktopTauri } from '@/utils/paths';
 import type { BadPathType } from '@/components';
 import {
   autoLoadInterface,
@@ -1652,7 +1653,7 @@ function App({ settingsInProductShell = false }: { settingsInProductShell?: bool
       setGlobalHotkeyError(null);
       return;
     }
-    if (!isTauri()) return; // 浏览器环境不支持全局快捷键
+    if (!isDesktopTauri()) return;
 
     const startKey = hotkeys.startTasks || 'F10';
     const stopKey = hotkeys.stopTasks || 'F11';

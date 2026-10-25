@@ -66,7 +66,7 @@ import {
   patchWebUIAppearance,
   patchWebUILayout,
 } from '@/services/appearanceStorage';
-import { isTauri } from '@/utils/paths';
+import { isTauri, isDesktopTauri } from '@/utils/paths';
 import {
   convertPresetOptionValue,
   generateId,
@@ -1589,8 +1589,8 @@ export const useAppStore = create<AppState>()(
       // 同步托盘设置到后端（仅 Tauri 环境）
       const minimizeToTray = config.settings.minimizeToTray ?? false;
       if (minimizeToTray) {
-        import('@/utils/paths').then(({ isTauri }) => {
-          if (!isTauri()) return;
+        import('@/utils/paths').then(({ isDesktopTauri }) => {
+          if (!isDesktopTauri()) return;
           import('@tauri-apps/api/core').then(({ invoke }) => {
             invoke('set_minimize_to_tray', { enabled: minimizeToTray }).catch((err) => {
               loggers.app.error('同步托盘设置失败:', err);
@@ -2085,7 +2085,7 @@ export const useAppStore = create<AppState>()(
     minimizeToTray: false,
     setMinimizeToTray: async (enabled) => {
       set({ minimizeToTray: enabled });
-      if (!isTauri()) return;
+      if (!isDesktopTauri()) return;
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('set_minimize_to_tray', { enabled });
